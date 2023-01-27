@@ -403,10 +403,10 @@ std::string parseProcessInfo(const std::filesystem::path path)
 {
     // Get stat file content.
     std::string processInfo { UNKNOWN_VALUE };
-    const std::string statContent = Utils::getFileContent(path);
+    const std::string statContent {Utils::getFileContent(path)};
 
-    const size_t openParenthesisPos = statContent.find("(");
-    const size_t closeParenthesisPos = statContent.find(")");
+    const size_t openParenthesisPos {statContent.find("(")};
+    const size_t closeParenthesisPos {statContent.find(")")};
 
     if (openParenthesisPos != std::string::npos && closeParenthesisPos != std::string::npos)
     {
@@ -418,15 +418,15 @@ std::string parseProcessInfo(const std::filesystem::path path)
 
 void findInodeMatch(const std::filesystem::path path, std::vector<int64_t>& inodes, bool& matchInode, const nlohmann::json& portsInfo)
 {
-    const std::filesystem::path fdFileContent = std::filesystem::read_symlink(path);
+    const std::filesystem::path fdFileContent {std::filesystem::read_symlink(path)};
 
     if (!fdFileContent.empty())
     {
         // Parse inode from symbolic link. The expected format is: socket[<inode_number>].
-        const size_t openBracketPos = fdFileContent.string().find("[");
-        const size_t closeBracketPos = fdFileContent.string().find("]");
-        const std::string match = fdFileContent.string().substr(openBracketPos + 1, closeBracketPos - openBracketPos - 1);
-        const int64_t matchN = std::stoi(match);
+        const size_t openBracketPos {fdFileContent.string().find("[")};
+        const size_t closeBracketPos {fdFileContent.string().find("]")};
+        const std::string match {fdFileContent.string().substr(openBracketPos + 1, closeBracketPos - openBracketPos - 1)};
+        const int64_t matchN {std::stoi(match)};
 
         if (std::any_of(portsInfo.cbegin(), portsInfo.cend(), [&](const auto it)
     {
@@ -448,7 +448,7 @@ void parseProcFS(nlohmann::json& portsInfo)
         // Iterate over proc directory.
         for (const auto& procFile : std::filesystem::directory_iterator(Procpath))
         {
-            const std::string procFileName = procFile.path().filename().string();
+            const std::string procFileName {procFile.path().filename().string()};
 
             // Only directories that represent a PID are inspected.
             if (Utils::isNumber(procFileName) && std::filesystem::is_directory(procFile.path()))
@@ -459,7 +459,7 @@ void parseProcFS(nlohmann::json& portsInfo)
                 // Iterate over PID directory.
                 for (const auto& pidFile : std::filesystem::directory_iterator(procFile.path()))
                 {
-                    const std::string pidFileName = pidFile.path().filename().string();
+                    const std::string pidFileName {pidFile.path().filename().string()};
 
                     // Only fd directory is inspected.
                     if (pidFileName.compare("fd") == 0 && std::filesystem::is_directory(pidFile.path()))
@@ -468,15 +468,13 @@ void parseProcFS(nlohmann::json& portsInfo)
                         for (const auto& fdFile : std::filesystem::directory_iterator(pidFile.path()))
                         {
                             // Only symlinks that represent a socket are read.
-                            try
+                            std::error_code ec;
+                            const auto status { fdFile.status(ec) };
+
+                            if (!ec && std::filesystem::is_socket(status))
                             {
-                                if (std::filesystem::is_socket(fdFile.status()))
-                                {
-                                    findInodeMatch(fdFile.path(), inodes, matchInode, portsInfo);
-                                }
+                                findInodeMatch(fdFile.path(), inodes, matchInode, portsInfo);
                             }
-                            catch (const std::filesystem::filesystem_error& e)
-                            {}
                         }
                     }
                 }
