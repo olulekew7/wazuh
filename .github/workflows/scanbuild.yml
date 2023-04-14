@@ -1,0 +1,62 @@
+name: Scan build
+on: push
+
+jobs:
+  scan-build-ubuntu-agent:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang-tools-14
+      - name: Build
+        run: |
+          cd src
+          make deps TARGET=agent -j2
+          scan-build-14 --status-bugs --force-analyze-debug-code -o scan-build-report --exclude external/ make TARGET=agent DEBUG=1 -j2
+      - name: Upload scan-build report
+        uses: actions/upload-artifact@v3
+        with:
+          name: linux-agent-scan-build-report
+          path: src/scan-build-report/
+
+  scan-build-ubuntu-manager:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang-tools-14
+      - name: Build
+        run: |
+          cd src
+          make deps TARGET=server -j2
+          scan-build-14 --status-bugs --force-analyze-debug-code -o scan-build-report --exclude external/ make TARGET=server DEBUG=1 -j2
+      - name: Upload scan-build report
+        uses: actions/upload-artifact@v3
+        with:
+          name: manager-scan-build-report
+          path: src/scan-build-report/
+
+  scan-build-ubuntu-mingw-windows:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang-tools-14 gcc-mingw-w64 g++-mingw-w64-i686 g++-mingw-w64-x86-64 nsis -y
+      - name: Build
+        run: |
+          cd src
+          make deps TARGET=winagent -j2
+          make TARGET=winagent DEBUG=1 -j2
+          make clean-internals
+          scan-build-14 --status-bugs --use-cc=/usr/bin/i686-w64-mingw32-gcc --use-c++=/usr/bin/i686-w64-mingw32-g++-posix --analyzer-target=i686-w64-mingw32 --force-analyze-debug-code make TARGET=winagent DEBUG=1 -j4
+      - name: Upload scan-build report
+        uses: actions/upload-artifact@v3
+        with:
+          name: windows-agent-scan-build-report
+          path: src/scan-build-report/
