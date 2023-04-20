@@ -6,6 +6,8 @@
 #include <string>
 #include <vector>
 
+#include <testsCommon.hpp>
+
 static const std::filesystem::path TEST_PATH = "/tmp/fileDriver_test";
 static const base::Name TEST_NAME({"type", "name", "version"});
 static const base::Name TEST_NAME_COLLECTION(std::vector<std::string> {"type", "name"});
@@ -16,7 +18,12 @@ static const json::Json TEST_JSON2 {R"({"key": "value2"})"};
 class FileDriverTest : public ::testing::Test
 {
 protected:
-    void SetUp() override { std::filesystem::create_directories(TEST_PATH); }
+    void SetUp() override
+    {
+        initLogging();
+
+        std::filesystem::create_directories(TEST_PATH);
+    }
 
     void TearDown() override { std::filesystem::remove_all(TEST_PATH); }
 };

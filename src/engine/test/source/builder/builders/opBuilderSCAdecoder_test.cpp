@@ -1,12 +1,3 @@
-/* Copyright (C) 2015-2022, Wazuh Inc.
- * All rights reserved.
- *
- * This program is free software; you can redistribute it
- * and/or modify it under the terms of the GNU General Public
- * License (version 2) as published by the FSF - Free Software
- * Foundation.
- */
-
 #include <any>
 #include <thread>
 #include <vector>
@@ -15,9 +6,8 @@
 
 #include <baseTypes.hpp>
 #include <utils/socketInterface/unixDatagram.hpp>
-#include <utils/socketInterface/unixSecureStream.hpp>
 
-#include <logging/logging.hpp>
+#include <testsCommon.hpp>
 #include <wdb/wdb.hpp>
 
 #include "opBuilderSCAdecoder.hpp"
@@ -41,123 +31,61 @@ protected:
     std::unordered_map<sca::field::Name, std::string> fieldSource {};
     std::unordered_map<sca::field::Name, std::string> fieldDest {};
 
-    const fmtlog::LogLevel logLevel {fmtlog::getLogLevel()};
-
     void SetUp() override
     {
-        // Disable error logs for these tests
-        fmtlog::setLogLevel(fmtlog::LogLevel(logging::LogLevel::Off));
+        initLogging();
 
         wdb = std::make_shared<wazuhdb::WazuhDB>(WDB_SOCK_PATH);
-        cfg = std::make_shared<base::utils::socketInterface::unixDatagram>(
-            CFG_AR_SOCK_PATH);
+        cfg = std::make_shared<base::utils::socketInterface::unixDatagram>(CFG_AR_SOCK_PATH);
 
-        for (sca::field::Name field = sca::field::Name::A_BEGIN;
-             field != sca::field::Name::A_END;
-             ++field)
+        for (sca::field::Name field = sca::field::Name::A_BEGIN; field != sca::field::Name::A_END; ++field)
         {
-            fieldSource.insert(
-                {field, "/event/original" + sca::field::getRealtivePath(field)});
-            fieldDest.insert(
-                {field, std::string {"/sca"} + sca::field::getRealtivePath(field)});
+            fieldSource.insert({field, "/event/original" + sca::field::getRealtivePath(field)});
+            fieldDest.insert({field, std::string {"/sca"} + sca::field::getRealtivePath(field)});
         }
     }
 
-    void TearDown() override
-    {
-        // Restore original log level
-        fmtlog::setLogLevel(fmtlog::LogLevel(logLevel));
-    }
+    void TearDown() override {}
 };
 
 class opBuilderSCAdecoderInit : public ::testing::Test
 {
 protected:
-    const fmtlog::LogLevel logLevel {fmtlog::getLogLevel()};
+    void SetUp() override { initLogging(); }
 
-    void SetUp() override
-    {
-        // Disable error logs for these tests
-        fmtlog::setLogLevel(fmtlog::LogLevel(logging::LogLevel::Off));
-    }
-
-    void TearDown() override
-    {
-        // Restore original log level
-        fmtlog::setLogLevel(fmtlog::LogLevel(logLevel));
-    }
+    void TearDown() override {}
 };
 
 class checkTypeDecoderSCA : public ::testing::Test
 {
 protected:
-    const fmtlog::LogLevel logLevel {fmtlog::getLogLevel()};
+    void SetUp() override { initLogging(); }
 
-    void SetUp() override
-    {
-        // Disable error logs for these tests
-        fmtlog::setLogLevel(fmtlog::LogLevel(logging::LogLevel::Off));
-    }
-
-    void TearDown() override
-    {
-        // Restore original log level
-        fmtlog::setLogLevel(fmtlog::LogLevel(logLevel));
-    }
+    void TearDown() override {}
 };
 
 class summaryTypeDecoderSCA : public ::testing::Test
 {
 protected:
-    const fmtlog::LogLevel logLevel {fmtlog::getLogLevel()};
+    void SetUp() override { initLogging(); }
 
-    void SetUp() override
-    {
-        // Disable error logs for these tests
-        fmtlog::setLogLevel(fmtlog::LogLevel(logging::LogLevel::Off));
-    }
-
-    void TearDown() override
-    {
-        // Restore original log level
-        fmtlog::setLogLevel(fmtlog::LogLevel(logLevel));
-    }
+    void TearDown() override {}
 };
 
 class policiesTypeDecoderSCA : public ::testing::Test
 {
 protected:
-    const fmtlog::LogLevel logLevel {fmtlog::getLogLevel()};
+    void SetUp() override { initLogging(); }
 
-    void SetUp() override
-    {
-        // Disable error logs for these tests
-        fmtlog::setLogLevel(fmtlog::LogLevel(logging::LogLevel::Off));
-    }
-
-    void TearDown() override
-    {
-        // Restore original log level
-        fmtlog::setLogLevel(fmtlog::LogLevel(logLevel));
-    }
+    void TearDown() override {}
 };
 
 class dumpEndTypeDecoderSCA : public ::testing::Test
 {
 protected:
-    const fmtlog::LogLevel logLevel {fmtlog::getLogLevel()};
+    void SetUp() override { initLogging(); }
 
-    void SetUp() override
-    {
-        // Disable error logs for these tests
-        fmtlog::setLogLevel(fmtlog::LogLevel(logging::LogLevel::Off));
-    }
-
-    void TearDown() override
-    {
-        // Restore original log level
-        fmtlog::setLogLevel(fmtlog::LogLevel(logLevel));
-    }
+    void TearDown() override {}
 };
 
 // Result true, only mandatory fields present

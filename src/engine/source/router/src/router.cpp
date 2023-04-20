@@ -21,6 +21,7 @@ Router::Router(std::shared_ptr<builder::Builder> builder, std::shared_ptr<store:
     , m_threads {}
     , m_builder {builder}
 {
+
     if (0 == threads || 128 < threads)
     {
         throw std::runtime_error("Router: The number of threads must be between 1 and 128");
@@ -36,13 +37,13 @@ Router::Router(std::shared_ptr<builder::Builder> builder, std::shared_ptr<store:
         throw std::runtime_error("Router: Store cannot be null");
     }
 
-    m_environmentManager = std::make_shared<EnvironmentManager>(builder, threads);
+    m_policyManager = std::make_shared<PolicyManager>(builder, threads);
 
     auto result = m_store->get(ROUTES_TABLE_NAME);
     if (std::holds_alternative<base::Error>(result))
     {
         const auto error = std::get<base::Error>(result);
-        WAZUH_LOG_DEBUG("Router: Routes table not found in store. Creating new table. {}", error.message);
+        LOG_DEBUG("Router: Routes table not found in store. Creating new table: {}.", error.message);
         m_store->add(ROUTES_TABLE_NAME, json::Json {"[]"});
         return;
     }
@@ -51,7 +52,7 @@ Router::Router(std::shared_ptr<builder::Builder> builder, std::shared_ptr<store:
         const auto table = std::get<json::Json>(result).getArray();
         if (!table.has_value())
         {
-            throw std::runtime_error("Can not get routes table from store. Invalid table format.");
+            throw std::runtime_error("Can not get routes table from store. Invalid table format");
         }
 
         for (const auto& jRoute : *table)
@@ -68,7 +69,7 @@ Router::Router(std::shared_ptr<builder::Builder> builder, std::shared_ptr<store:
             const auto err = addRoute(name.value(), priority.value(), filter.value(), target.value());
             if (err.has_value())
             {
-                WAZUH_LOG_WARN("Router: couldn't add route '{}' to the router: {}", name.value(), err.value().message);
+                LOG_WARNING("Router: couldn't add route '{}' to the router: {}.", name.value(), err.value().message);
             }
         }
     }
@@ -76,12 +77,12 @@ Router::Router(std::shared_ptr<builder::Builder> builder, std::shared_ptr<store:
     if (getRouteTable().empty())
     {
         // Add default route
-        WAZUH_LOG_WARN("There is no environment loaded. Events will be written in disk once the queue is full.");
+        LOG_WARNING("There is no environment loaded. Events will be written in disk once the queue is full.");
     }
 };
 
 std::optional<base::Error>
-Router::addRoute(const std::string& routeName, int priority, const std::string& filterName, const std::string& envName)
+Router::addRoute(const std::string& routeName, int priority, const std::string& filterName, const std::string& policyName)
 {
     // Validate route name
     if (routeName.empty())
@@ -93,10 +94,10 @@ Router::addRoute(const std::string& routeName, int priority, const std::string& 
     {
         return base::Error {"Filter name cannot be empty"};
     }
-    // Validate environment name
-    if (envName.empty())
+    // Validate policy name
+    if (policyName.empty())
     {
-        return base::Error {"Environment name cannot be empty"};
+        return base::Error {"Policy name cannot be empty"};
     }
     try
     {
@@ -106,17 +107,17 @@ Router::addRoute(const std::string& routeName, int priority, const std::string& 
         for (std::size_t i = 0; i < m_numThreads; ++i)
         {
             auto filter = m_builder->buildFilter(filterName);
-            routeInstances.emplace_back(Route {routeName, filter, envName, priority});
+            routeInstances.emplace_back(Route {routeName, filter, policyName, priority});
         }
 
-        // Add the environment
-        auto err = m_environmentManager->addEnvironment(envName);
+        // Add the policy
+        auto err = m_policyManager->addPolicy(policyName);
         if (err)
         {
             return base::Error {err.value()};
         }
 
-        // Link the route to the environment
+        // Link the route to the policy
         {
             std::unique_lock lock {m_mutexRoutes};
             std::optional<base::Error> err = std::nullopt;
@@ -134,7 +135,7 @@ Router::addRoute(const std::string& routeName, int priority, const std::string& 
             if (err)
             {
                 lock.unlock();
-                m_environmentManager->deleteEnvironment(envName);
+                m_policyManager->deletePolicy(policyName);
                 return err;
             }
             m_namePriorityFilter.insert(std::make_pair(routeName, std::make_tuple(priority, filterName)));
@@ -164,23 +165,22 @@ void Router::removeRoute(const std::string& routeName)
     if (it2 == m_priorityRoute.end())
     {
         // Should never happen
-        WAZUH_LOG_WARN("Router: Priority '{}' not found when removing route '{}'", priority, routeName);
+        LOG_WARNING("Router: Priority '{}' not found when removing route '{}'", priority, routeName);
         return;
     }
-    const auto envName = it2->second.front().getTarget();
+    const auto policyName = it2->second.front().getTarget();
     // Remove from maps
     m_namePriorityFilter.erase(it);
     m_priorityRoute.erase(it2);
     lock.unlock();
 
     dumpTableToStorage();
-    auto err = m_environmentManager->deleteEnvironment(envName);
+    auto err = m_policyManager->deletePolicy(policyName);
     if (err)
     {
         // Should never happen
-        WAZUH_LOG_WARN("Router: couldn't delete environment '{}': {} ", envName, err.value().message);
+        LOG_WARNING("Router: couldn't delete policy '{}': {} ", policyName, err.value().message);
     }
-    return;
 }
 
 std::vector<Router::Entry> Router::getRouteTable()
@@ -195,13 +195,13 @@ std::vector<Router::Entry> Router::getRouteTable()
             const auto& name = route.first;
             const auto& priority = std::get<0>(route.second);
             const auto& filterName = std::get<1>(route.second);
-            const auto& envName = m_priorityRoute.at(priority).front().getTarget();
-            table.emplace_back(name, priority, filterName, envName);
+            const auto& policyName = m_priorityRoute.at(priority).front().getTarget();
+            table.emplace_back(name, priority, filterName, policyName);
         }
     }
     catch (const std::exception& e)
     {
-        WAZUH_LOG_ERROR("Error getting route table: {}", e.what()); // Should never happen
+        LOG_ERROR("Error getting route table: {}.", e.what()); // This should never happen
     }
     lock.unlock();
 
@@ -220,9 +220,9 @@ std::optional<Router::Entry> Router::getEntry(const std::string& name)
         return std::nullopt;
     }
     const auto& [priority, filterName] = it->second;
-    const auto& envName = m_priorityRoute.at(priority).front().getTarget();
+    const auto& policyName = m_priorityRoute.at(priority).front().getTarget();
 
-    return Entry {name, priority, filterName, envName};
+    return Entry {name, priority, filterName, policyName};
 }
 
 std::optional<base::Error> Router::changeRoutePriority(const std::string& name, int priority)
@@ -276,17 +276,14 @@ std::optional<base::Error> Router::changeRoutePriority(const std::string& name, 
     return std::nullopt;
 }
 
-std::optional<base::Error> Router::enqueueEvent(base::Event event)
+std::optional<base::Error> Router::enqueueEvent(base::Event&& event)
 {
     if (!m_isRunning.load() || !m_queue)
     {
         return base::Error {"The router queue is not initialized"};
     }
-    if (m_queue->try_enqueue(std::move(event)))
-    {
-        return std::nullopt;
-    }
-    return base::Error {"The router queue is in high load"};
+    m_queue->push(std::move(event));
+    return std::nullopt;
 }
 
 std::optional<base::Error> Router::enqueueOssecEvent(std::string_view event)
@@ -296,7 +293,7 @@ std::optional<base::Error> Router::enqueueOssecEvent(std::string_view event)
     try
     {
         base::Event ev = base::parseEvent::parseOssecEvent(event.data());
-        err = enqueueEvent(ev);
+        err = enqueueEvent(std::move(ev));
     }
     catch (const std::exception& e)
     {
@@ -329,7 +326,7 @@ std::optional<base::Error> Router::run(std::shared_ptr<concurrentQueue> queue)
                 while (m_isRunning.load())
                 {
                     base::Event event {};
-                    if (queue->wait_dequeue_timed(event, WAIT_DEQUEUE_TIMEOUT_USEC))
+                    if (queue->waitPop(event, WAIT_DEQUEUE_TIMEOUT_USEC))
                     {
                         std::shared_lock lock {m_mutexRoutes};
                         for (auto& route : m_priorityRoute)
@@ -338,13 +335,13 @@ std::optional<base::Error> Router::run(std::shared_ptr<concurrentQueue> queue)
                             {
                                 const auto& target = route.second[i].getTarget();
                                 lock.unlock();
-                                m_environmentManager->forwardEvent(target, i, std::move(event));
+                                m_policyManager->forwardEvent(target, i, std::move(event));
                                 break;
                             }
                         }
                     }
                 }
-                WAZUH_LOG_DEBUG("Thread [{}] router finished.", i);
+                LOG_DEBUG("Thread '{}' router finished.", i);
             });
     };
 
@@ -364,7 +361,7 @@ void Router::stop()
     }
     m_threads.clear();
 
-    WAZUH_LOG_DEBUG("Router stopped.");
+    LOG_DEBUG("Router stopped.");
 }
 
 json::Json Router::tableToJson()
@@ -373,13 +370,13 @@ json::Json Router::tableToJson()
     data.setArray();
 
     const auto table = getRouteTable();
-    for (const auto& [name, priority, filterName, envName] : table)
+    for (const auto& [name, priority, filterName, policyName] : table)
     {
         json::Json entry {};
         entry.setString(name, JSON_PATH_NAME);
         entry.setInt(priority, JSON_PATH_PRIORITY);
         entry.setString(filterName, JSON_PATH_FILTER);
-        entry.setString(envName, JSON_PATH_TARGET);
+        entry.setString(policyName, JSON_PATH_TARGET);
         data.appendJson(entry);
     }
     return data;
@@ -390,7 +387,7 @@ void Router::dumpTableToStorage()
     const auto err = m_store->update(ROUTES_TABLE_NAME, tableToJson());
     if (err)
     {
-        WAZUH_LOG_ERROR("Error updating routes table: {}", err.value().message);
+        LOG_ERROR("Error updating routes table: {}.", err.value().message);
         exit(10);
         // TODO: throw exception and exit program (Review when the exit policy is implemented)
     }
@@ -405,7 +402,7 @@ void Router::clear()
     }
 
     dumpTableToStorage();
-    m_environmentManager->delAllEnvironments();
+    m_policyManager->delAllPolicies();
 }
 
 } // namespace router

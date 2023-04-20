@@ -1,11 +1,4 @@
-/* Copyright (C) 2015-2022, Wazuh Inc.
- * All rights reserved.
- *
- * This program is free software; you can redistribute it
- * and/or modify it under the terms of the GNU General Public
- * License (version 2) as published by the FSF - Free Software
- * Foundation.
- */
+
 #include <any>
 #include <memory>
 #include <vector>
@@ -15,7 +8,11 @@
 
 #include <baseTypes.hpp>
 #include <kvdb/kvdbManager.hpp>
+#include <testsCommon.hpp>
 #include <opBuilderKVDB.hpp>
+
+#include <metrics/metricsManager.hpp>
+using namespace metricsManager;
 
 namespace
 {
@@ -33,12 +30,14 @@ protected:
     static constexpr auto DB_NAME = "TEST_DB";
     static constexpr auto DB_DIR = "/tmp/";
 
+    std::shared_ptr<IMetricsManager> m_manager = std::make_shared<MetricsManager>();
+
     std::shared_ptr<kvdb_manager::KVDBManager> kvdbManager =
-        std::make_shared<kvdb_manager::KVDBManager>(opBuilderKVDBSetTest::DB_DIR);
+        std::make_shared<kvdb_manager::KVDBManager>(opBuilderKVDBSetTest::DB_DIR, m_manager);
 
-    virtual void SetUp() {}
+    void SetUp() override { initLogging(); }
 
-    virtual void TearDown() { kvdbManager->unloadDB(DB_NAME); }
+    void TearDown() override { kvdbManager->unloadDB(DB_NAME); }
 };
 
 // Build ok

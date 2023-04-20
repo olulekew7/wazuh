@@ -1,8 +1,3 @@
-/* Copyright (C) 2015-2022, Wazuh Inc.
- * All rights reserved.
- *
- */
-
 #include <any>
 #include <thread>
 #include <vector>
@@ -11,9 +6,8 @@
 
 #include <baseTypes.hpp>
 #include <utils/socketInterface/unixDatagram.hpp>
-#include <utils/socketInterface/unixSecureStream.hpp>
 
-#include <logging/logging.hpp>
+#include <testsCommon.hpp>
 #include <wdb/wdb.hpp>
 
 #include "opBuilderWdb.hpp"
@@ -24,8 +18,17 @@ using namespace wazuhdb;
 namespace bld = builder::internals::builders;
 namespace unixStream = base::utils::socketInterface;
 
+class opBuilderWdbUpdate : public ::testing::Test
+{
+
+protected:
+    void SetUp() override { initLogging(); }
+
+    void TearDown() override {}
+};
+
 // Build ok
-TEST(opBuilderWdbUpdate, Build)
+TEST_F(opBuilderWdbUpdate, Build)
 {
     auto tuple {std::make_tuple(
         std::string {"/sourceField"},
@@ -35,7 +38,7 @@ TEST(opBuilderWdbUpdate, Build)
     ASSERT_NO_THROW(bld::opBuilderWdbUpdate(tuple));
 }
 
-TEST(opBuilderWdbUpdate, BuildsWithJson)
+TEST_F(opBuilderWdbUpdate, BuildsWithJson)
 {
 
     auto tuple {std::make_tuple(
@@ -48,7 +51,7 @@ TEST(opBuilderWdbUpdate, BuildsWithJson)
     ASSERT_NO_THROW(bld::opBuilderWdbUpdate(tuple));
 }
 
-TEST(opBuilderWdbUpdate, BuildsWithQueryRef)
+TEST_F(opBuilderWdbUpdate, BuildsWithQueryRef)
 {
 
     auto tuple {std::make_tuple(std::string {"/wdb/result"},
@@ -58,7 +61,7 @@ TEST(opBuilderWdbUpdate, BuildsWithQueryRef)
     ASSERT_NO_THROW(bld::opBuilderWdbUpdate(tuple));
 }
 
-TEST(opBuilderWdbUpdate, checkWrongQttyParams)
+TEST_F(opBuilderWdbUpdate, checkWrongQttyParams)
 {
 
     auto tuple {
@@ -69,7 +72,7 @@ TEST(opBuilderWdbUpdate, checkWrongQttyParams)
     ASSERT_THROW(bld::opBuilderWdbUpdate(tuple), std::runtime_error);
 }
 
-TEST(opBuilderWdbUpdate, gettingEmptyReference)
+TEST_F(opBuilderWdbUpdate, gettingEmptyReference)
 {
     auto tuple {std::make_tuple(std::string {"/wdb/result"},
                                 std::string {"wdb_update"},
@@ -84,7 +87,7 @@ TEST(opBuilderWdbUpdate, gettingEmptyReference)
     ASSERT_FALSE(result1);
 }
 
-TEST(opBuilderWdbUpdate, gettingNonExistingReference)
+TEST_F(opBuilderWdbUpdate, gettingNonExistingReference)
 {
     auto tuple {std::make_tuple(std::string {"/wdb/result"},
                                 std::string {"wdb_update"},
@@ -99,7 +102,7 @@ TEST(opBuilderWdbUpdate, gettingNonExistingReference)
     ASSERT_FALSE(result1);
 }
 
-TEST(opBuilderWdbUpdate, completeFunctioningWithBadResponse)
+TEST_F(opBuilderWdbUpdate, completeFunctioningWithBadResponse)
 {
 
     auto tuple {std::make_tuple(std::string {"/wdb/result"},
@@ -122,13 +125,7 @@ TEST(opBuilderWdbUpdate, completeFunctioningWithBadResponse)
         close(clientRemote);
     });
 
-    // Disable error logs for this test
-    const auto logLevel {fmtlog::getLogLevel()};
-    fmtlog::setLogLevel(fmtlog::LogLevel(logging::LogLevel::Off));
-
     result::Result<Event> result1 {op(event1)};
-
-    fmtlog::setLogLevel(fmtlog::LogLevel(logLevel)); // Restore log level
 
     ASSERT_TRUE(result1);
     ASSERT_TRUE(result1.payload()->isBool("/wdb/result"));
@@ -138,7 +135,7 @@ TEST(opBuilderWdbUpdate, completeFunctioningWithBadResponse)
     close(serverSocketFD);
 }
 
-TEST(opBuilderWdbUpdate, completeFunctioningWithOkResponse)
+TEST_F(opBuilderWdbUpdate, completeFunctioningWithOkResponse)
 {
     auto tuple {std::make_tuple(std::string {"/wdb/result"},
                                 std::string {"wdb_update"},
@@ -170,7 +167,7 @@ TEST(opBuilderWdbUpdate, completeFunctioningWithOkResponse)
     close(serverSocketFD);
 }
 
-TEST(opBuilderWdbUpdate, completeFunctioningWithOkResponseWPayload)
+TEST_F(opBuilderWdbUpdate, completeFunctioningWithOkResponseWPayload)
 {
     auto tuple {std::make_tuple(std::string {"/wdb/result"},
                                 std::string {"wdb_update"},
@@ -201,7 +198,7 @@ TEST(opBuilderWdbUpdate, completeFunctioningWithOkResponseWPayload)
     close(serverSocketFD);
 }
 
-TEST(opBuilderWdbUpdate, QueryResultCodeNotOkWithPayload)
+TEST_F(opBuilderWdbUpdate, QueryResultCodeNotOkWithPayload)
 {
     auto tuple {std::make_tuple(std::string {"/wdb/result"},
                                 std::string {"wdb_update"},
@@ -223,13 +220,7 @@ TEST(opBuilderWdbUpdate, QueryResultCodeNotOkWithPayload)
         close(clientRemote);
     });
 
-    // Disable error logs for this test
-    const auto logLevel {fmtlog::getLogLevel()};
-    fmtlog::setLogLevel(fmtlog::LogLevel(logging::LogLevel::Off));
-
     result::Result<Event> result1 {op(event1)};
-
-    fmtlog::setLogLevel(fmtlog::LogLevel(logLevel)); // Restore log level
 
     ASSERT_TRUE(result1);
     ASSERT_TRUE(result1.payload()->isBool("/wdb/result"));
@@ -239,7 +230,7 @@ TEST(opBuilderWdbUpdate, QueryResultCodeNotOkWithPayload)
     close(serverSocketFD);
 }
 
-TEST(opBuilderWdbUpdate, QueryResultCodeOkPayloadEmpty)
+TEST_F(opBuilderWdbUpdate, QueryResultCodeOkPayloadEmpty)
 {
     auto tuple {std::make_tuple(std::string {"/wdb/result"},
                                 std::string {"wdb_update"},

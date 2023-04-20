@@ -16,6 +16,7 @@ using ConfHandler = std::shared_ptr<conf::IConf<conf::CliConf>>;
 void runStart(ConfHandler confManager);
 
 void configure(CLI::App_p app);
+
 } // namespace cmd::server
 
 #endif // _CMD_START_HPP

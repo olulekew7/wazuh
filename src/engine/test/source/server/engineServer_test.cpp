@@ -1,91 +1,67 @@
-/* Copyright (C) 2015-2021, Wazuh Inc.
- * All rights reserved.
- *
- * This program is free software; you can redistribute it
- * and/or modify it under the terms of the GNU General Public
- * License (version 2) as published by the FSF - Free Software
- * Foundation.
- */
-
-#include <string>
-#include <vector>
-
 #include <gtest/gtest.h>
-#include <rxcpp/rx.hpp>
+#include <server/engineServer.hpp>
+#include <server/endpoint.hpp>
+#include <thread>
+#include <chrono>
 
-#include <uvw/pipe.hpp>
-#include <uvw/tcp.hpp>
-#include <uvw/udp.hpp>
+#include <testsCommon.hpp>
 
-//#include "engineServer.hpp"
+class MockEndpoint : public engineserver::Endpoint {
+public:
+    MockEndpoint(const std::string& address, const std::size_t taskQueueSize)
+        : Endpoint(address, taskQueueSize) {}
 
-//using namespace engineserver;
-using namespace std;
-using namespace rxcpp;
+    void bind(std::shared_ptr<uvw::Loop> loop) override {
+        m_loop = loop;
+    }
 
-#define GTEST_COUT cerr << "[          ] [ INFO ]"
+    void close() override {
+        m_loop.reset();
+    }
 
-TEST(ServerTest, InitializesTcp)
-{
-    //vector<string> config = {"tcp:localhost:5054"};
-    //ASSERT_NO_THROW(EngineServer server(config));
-    GTEST_SKIP();
+    bool pause() override {
+        return true;
+    }
+
+    bool resume() override {
+        return true;
+    }
+};
+
+class EngineServerTest : public testing::Test {
+protected:
+    void SetUp() override {
+        initLogging();
+        server = std::make_unique<engineserver::EngineServer>();
+    }
+
+    void TearDown() override {
+        server.reset();
+    }
+
+    std::unique_ptr<engineserver::EngineServer> server;
+};
+
+TEST_F(EngineServerTest, StartAndRequestStop) {
+    std::thread serverThread([this]() {
+        server->start();
+    });
+
+    // Wait for the server to start and then request to stop
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    server->request_stop();
+
+    // Join the server thread to make sure it stops properly
+    serverThread.join();
 }
 
-// TEST(ServerTest, InitializesUdp)
-// {
-//     vector<string> config = {"udp:localhost:5054"};
-//     ASSERT_NO_THROW(EngineServer server(config));
-// }
+TEST_F(EngineServerTest, AddEndpoint) {
+    auto endpoint1 = std::make_shared<MockEndpoint>("test_endpoint1", 0);
+    ASSERT_NO_THROW(server->addEndpoint("test_endpoint1", endpoint1));
 
-// TEST(ServerTest, InitializesSocket)
-// {
-//     vector<string> config = {"socket:/tmp/testsocket"};
-//     ASSERT_NO_THROW(EngineServer server(config));
-// }
+    auto endpoint2 = std::make_shared<MockEndpoint>("test_endpoint2", 0);
+    ASSERT_NO_THROW(server->addEndpoint("test_endpoint2", endpoint2));
 
-// TEST(ServerTest, InitializesErrorEndpointType)
-// {
-//     vector<string> config = {"error:localhost:5054"};
-//     ASSERT_THROW(EngineServer server(config), invalid_argument);
-// }
-
-// TEST(ServerTest, RunStopTcp)
-// {
-//     vector<string> config = {"tcp:localhost:5054"};
-//     EngineServer server(config);
-//     ASSERT_NO_THROW(server.run());
-//     // Give time to initialize before closing
-//     this_thread::sleep_for(chrono::milliseconds(5));
-//     ASSERT_NO_THROW(server.close());
-// }
-
-// TEST(ServerTest, RunStopUdp)
-// {
-//     vector<string> config = {"udp:localhost:5054"};
-//     EngineServer server(config);
-//     ASSERT_NO_THROW(server.run());
-//     // Give time to initialize before closing
-//     this_thread::sleep_for(chrono::milliseconds(5));
-//     ASSERT_NO_THROW(server.close());
-// }
-
-// TEST(ServerTest, RunStopSocket)
-// {
-//     vector<string> config = {"socket:/tmp/testsocket"};
-//     EngineServer server(config);
-//     ASSERT_NO_THROW(server.run());
-//     // Give time to initialize before closing
-//     this_thread::sleep_for(chrono::milliseconds(5));
-//     ASSERT_NO_THROW(server.close());
-// }
-
-// TEST(ServerTest, RunStopTcpUdpSocket)
-// {
-//     vector<string> config = {"socket:/tmp/testsocket", "udp:localhost:5054", "tcp:localhost:5054"};
-//     EngineServer server(config);
-//     ASSERT_NO_THROW(server.run());
-//     // Give time to initialize before closing
-//     this_thread::sleep_for(chrono::milliseconds(5));
-//     ASSERT_NO_THROW(server.close());
-// }
+    auto endpoint3 = std::make_shared<MockEndpoint>("test_endpoint1", 0);
+    ASSERT_THROW(server->addEndpoint("test_endpoint1", endpoint3), std::runtime_error);
+}

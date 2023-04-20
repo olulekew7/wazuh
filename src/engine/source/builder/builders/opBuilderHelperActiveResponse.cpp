@@ -1,8 +1,3 @@
-/* Copyright (C) 2015-2022, Wazuh Inc.
- * All rights reserved.
- *
- */
-
 #include "opBuilderHelperActiveResponse.hpp"
 
 #include <algorithm>
@@ -300,6 +295,7 @@ base::Expression opBuilderHelperCreateAR(const std::any& definition)
 }
 
 // field: +active_response_send/ar_message
+
 base::Expression opBuilderHelperSendAR(const std::any& definition)
 {
     // Extract parameters from any

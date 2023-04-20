@@ -1,13 +1,14 @@
 #ifndef _ROUTER_AUX_FUNCTIONS_H
 #define _ROUTER_AUX_FUNCTIONS_H
 
-#include <blockingconcurrentqueue.h>
-
-#include "parseEvent.hpp"
+#include <parseEvent.hpp>
+#include <queue/concurrentQueue.hpp>
 
 #include "utils/stringUtils.hpp"
 #include <builder.hpp>
 #include <registry.hpp>
+
+#include <mocks/fakeMetric.hpp>
 
 namespace aux
 {
@@ -21,24 +22,22 @@ base::Event createFakeMessage(std::optional<std::string> msgOpt = std::nullopt);
 
 struct testQueue
 {
-    std::shared_ptr<moodycamel::BlockingConcurrentQueue<base::Event>> m_eventQueue;
+    std::shared_ptr<base::queue::ConcurrentQueue<base::Event>> m_eventQueue;
 
-    std::shared_ptr<moodycamel::BlockingConcurrentQueue<base::Event>> getQueue()
+    std::shared_ptr<base::queue::ConcurrentQueue<base::Event>> getQueue()
     {
         if (m_eventQueue == nullptr)
         {
-            m_eventQueue = std::make_shared<moodycamel::BlockingConcurrentQueue<base::Event>>(100);
+            m_eventQueue = std::make_shared<base::queue::ConcurrentQueue<base::Event>>(
+                100, std::make_shared<FakeMetricScope>(), std::make_shared<FakeMetricScope>());
         }
         return m_eventQueue;
     }
 
     void pushEvent(const base::Event& event)
     {
-        bool res = getQueue()->enqueue(event);
-        if (!res)
-        {
-            throw std::runtime_error("Error pushing event to queue");
-        }
+        auto e = event;
+        getQueue()->push(std::move(e));
     }
 };
 

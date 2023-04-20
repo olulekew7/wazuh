@@ -12,6 +12,7 @@
 #include <hlp/registerParsers.hpp>
 #include <kvdb/kvdbManager.hpp>
 #include <logging/logging.hpp>
+#include <metrics/metricsManager.hpp>
 #include <name.hpp>
 #include <rxbk/rxFactory.hpp>
 #include <store/drivers/fileDriver.hpp>
@@ -22,7 +23,6 @@
 #include "defaultSettings.hpp"
 #include "register.hpp"
 #include "registry.hpp"
-#include "server/wazuhStreamProtocol.hpp"
 
 namespace
 {
@@ -40,21 +40,17 @@ namespace cmd::test
 {
 void run(const Options& options)
 {
-    // Init logging
-    logging::LoggingConfig logConfig;
-    logConfig.header = "";
-    switch (options.logLevel)
-    {
-        case 0: logConfig.logLevel = logging::LogLevel::Debug; break;
-        case 1: logConfig.logLevel = logging::LogLevel::Info; break;
-        case 2: logConfig.logLevel = logging::LogLevel::Warn; break;
-        case 3: logConfig.logLevel = logging::LogLevel::Error; break;
-        default: logging::LogLevel::Error;
-    }
-    logging::loggingInit(logConfig);
-    g_exitHanlder.add([]() { logging::loggingTerm(); });
+    // Logging init
 
-    auto kvdb = std::make_shared<kvdb_manager::KVDBManager>(options.kvdbPath);
+     // Logging init
+    logging::LoggingConfig logConfig;
+    logConfig.logLevel = options.logLevel;
+
+    logging::loggingInit(logConfig);
+
+    auto metricsManager = std::make_shared<metricsManager::MetricsManager>();
+
+    auto kvdb = std::make_shared<kvdb_manager::KVDBManager>(options.kvdbPath, metricsManager);
     g_exitHanlder.add([kvdb]() { kvdb->clear(); });
 
     auto fileStore = std::make_shared<store::FileDriver>(options.fileStorage);
@@ -63,17 +59,16 @@ void run(const Options& options)
     auto hlpParsers = fileStore->get(hlpConfigFileName);
     if (std::holds_alternative<base::Error>(hlpParsers))
     {
-        WAZUH_LOG_ERROR("Engine \"test\" command: Configuration file \"{}\" could not be "
-                        "obtained: {}",
-                        hlpConfigFileName.fullName(),
-                        std::get<base::Error>(hlpParsers).message);
+        LOG_ERROR("Engine 'test' command: Configuration file '{}' could not be obtained: {}.",
+                  hlpConfigFileName.fullName(),
+                  std::get<base::Error>(hlpParsers).message);
 
         g_exitHanlder.execute();
         return;
     }
     auto logpar = std::make_shared<hlp::logpar::Logpar>(std::get<json::Json>(hlpParsers));
     hlp::registerParsers(logpar);
-    WAZUH_LOG_INFO("HLP initialized");
+    LOG_INFO("HLP initialized.");
 
     auto registry = std::make_shared<builder::internals::Registry>();
     size_t logparDebugLvl = options.debugLevel > 2 ? 1 : 0;
@@ -83,9 +78,8 @@ void run(const Options& options)
     }
     catch (const std::exception& e)
     {
-        WAZUH_LOG_ERROR("Engine \"test\" command: An error occurred while registering "
-                        "the builders: {}",
-                        utils::getExceptionStack(e));
+        LOG_ERROR("Engine 'test' command: An error occurred while registering the builders: {}.",
+                  utils::getExceptionStack(e));
         g_exitHanlder.execute();
         return;
     }
@@ -93,24 +87,22 @@ void run(const Options& options)
     // Delete outputs
     try
     {
-        base::Name envName {options.environment};
+        base::Name envName {options.policy};
     }
     catch (const std::exception& e)
     {
-        WAZUH_LOG_ERROR("Engine \"test\" command: An error occurred while creating the "
-                        "environment \"{}\": {}",
-                        options.environment,
-                        utils::getExceptionStack(e));
+        LOG_ERROR("Engine 'test' command: An error occurred while creating the policy '{}': {}.",
+                  options.policy,
+                  utils::getExceptionStack(e));
         g_exitHanlder.execute();
         return;
     }
-    auto envDefinition = fileStore->get({options.environment});
+    auto envDefinition = fileStore->get({options.policy});
     if (std::holds_alternative<base::Error>(envDefinition))
     {
-        WAZUH_LOG_ERROR("Engine \"test\" command: An error occurred while getting the "
-                        "definition of the environment \"{}\": {}",
-                        options.environment,
-                        std::get<base::Error>(envDefinition).message);
+        LOG_ERROR("Engine 'test' command: An error occurred while getting the definition of the policy '{}': {}.",
+                  options.policy,
+                  std::get<base::Error>(envDefinition).message);
         g_exitHanlder.execute();
         return;
     }
@@ -121,13 +113,13 @@ void run(const Options& options)
     struct TestDriver : store::IStoreRead
     {
         std::shared_ptr<store::FileDriver> driver;
-        json::Json testEnvironment;
+        json::Json testPolicy;
 
         std::variant<json::Json, base::Error> get(const base::Name& name) const
         {
-            if ("environment" == name.parts()[0])
+            if ("policy" == name.parts()[0])
             {
-                return testEnvironment;
+                return testPolicy;
             }
             else
             {
@@ -137,21 +129,20 @@ void run(const Options& options)
     };
     auto _testDriver = std::make_shared<TestDriver>();
     _testDriver->driver = fileStore;
-    _testDriver->testEnvironment = envTmp;
+    _testDriver->testPolicy = envTmp;
 
     // TODO: Handle errors on construction
     builder::Builder _builder(_testDriver, registry);
-    decltype(_builder.buildEnvironment({options.environment})) env;
+    decltype(_builder.buildPolicy({options.policy})) env;
     try
     {
-        env = _builder.buildEnvironment({options.environment});
+        env = _builder.buildPolicy({options.policy});
     }
     catch (const std::exception& e)
     {
-        WAZUH_LOG_ERROR("Engine \"test\" command: An error occurred while building the "
-                        "environment \"{}\": {}",
-                        options.environment,
-                        utils::getExceptionStack(e));
+        LOG_ERROR("Engine 'test' command: An error occurred while building the policy '{}': {}.",
+                  options.policy,
+                  utils::getExceptionStack(e));
         g_exitHanlder.execute();
         return;
     }
@@ -213,10 +204,9 @@ void run(const Options& options)
                 }
                 catch (const std::exception& e)
                 {
-                    WAZUH_LOG_WARN("Engine \"test\" command: Asset \"{}\" could not "
-                                   "found, skipping tracer: {}",
-                                   name,
-                                   utils::getExceptionStack(e));
+                    LOG_WARNING("Engine 'test' command: Asset '{}' could not found, skipping tracer: {}.",
+                                name,
+                                utils::getExceptionStack(e));
                 }
             }
         }
@@ -309,7 +299,7 @@ void run(const Options& options)
         }
         catch (const std::exception& e)
         {
-            WAZUH_LOG_ERROR("Engine \"test\" command: An error occurred while parsing a message: {}", e.what());
+            LOG_ERROR("Engine 'test' command: An error occurred while parsing a message: {}.", e.what());
         }
     }
 
@@ -334,8 +324,8 @@ void configure(CLI::App_p app)
         ->default_val(ENGINE_STORE_PATH)
         ->check(CLI::ExistingDirectory);
 
-    // Environment
-    logtestApp->add_option("--environment", options->environment, "Name of the environment to be used.")
+    // Policy
+    logtestApp->add_option("--policy", options->policy, "Name of the policy to be used.")
         ->default_val(ENGINE_ENVIRONMENT_TEST);
 
     // Protocol queue
@@ -349,12 +339,9 @@ void configure(CLI::App_p app)
         ->default_val(ENGINE_PROTOCOL_LOCATION);
 
     // Log level
-    logtestApp
-        ->add_option("-l, --log_level",
-                     options->logLevel,
-                     "Sets the logging level. 0 = Debug, 1 = Info, 2 = Warning, 3 = Error.")
+    logtestApp->add_option("-l, --log_level", options->logLevel, "Sets the logging level.")
         ->default_val(ENGINE_LOG_LEVEL)
-        ->check(CLI::Range(0, 3));
+        ->check(CLI::IsMember({"trace", "debug", "info", "warning", "error", "critical", "off"}));
 
     // Debug levels
     auto debug = logtestApp->add_flag("-d, --debug",

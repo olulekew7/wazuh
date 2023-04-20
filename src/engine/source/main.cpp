@@ -10,6 +10,8 @@
 #include <cmds/start.hpp>
 #include <cmds/test.hpp>
 #include <cmds/apiExcept.hpp>
+#include <cmds/metrics.hpp>
+#include <cmds/integration.hpp>
 
 namespace
 {
@@ -37,12 +39,14 @@ int main(int argc, char* argv[])
 
     // Configure each subcommand
     cmd::server::configure(app);
-    cmd::test::configure(app);
-    cmd::graph::configure(app);
+    cmd::test::configure(app); //TODO: Create a test command using the new API
+    cmd::graph::configure(app); //TODO: Create a graph command using the new API
     cmd::kvdb::configure(app);
     cmd::catalog::configure(app);
     cmd::config::configure(app);
     cmd::router::configure(app);
+    cmd::metrics::configure(app);
+    cmd::integration::configure(app);
 
     try
     {

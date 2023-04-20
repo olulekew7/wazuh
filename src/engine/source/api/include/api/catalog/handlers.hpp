@@ -5,7 +5,7 @@
 
 #include <memory>
 
-#include <api/registry.hpp>
+#include <api/api.hpp>
 
 namespace api::catalog::handlers
 {
@@ -16,16 +16,18 @@ api::Handler resourceGet(std::shared_ptr<Catalog> catalog);
 api::Handler resourceDelete(std::shared_ptr<Catalog> catalog);
 api::Handler resourcePut(std::shared_ptr<Catalog> catalog);
 api::Handler resourceValidate(std::shared_ptr<Catalog> catalog);
+api::Handler policyAddIntegration(std::shared_ptr<Catalog> catalog);
+api::Handler policyDelIntegration(std::shared_ptr<Catalog> catalog);
 
 /**
  * @brief Register all available Catalog handlers in the API registry.
  *
  * @param catalog Catalog to use
- * @param registry API registry
+ * @param api API to register the handlers
  * @throw std::runtime_error If the command registration fails for any reason and at any
  * point
  */
-void registerHandlers(std::shared_ptr<Catalog> catalog, std::shared_ptr<api::Registry> registry);
+void registerHandlers(std::shared_ptr<Catalog> catalog, std::shared_ptr<api::Api> api);
 
 } // namespace api::catalog::handlers
 

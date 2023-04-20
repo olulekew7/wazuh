@@ -4,8 +4,12 @@
 #include <fstream>
 
 #include <gtest/gtest.h>
+#include <testsCommon.hpp>
+
+#include <metrics/metricsManager.hpp>
 
 using namespace api::kvdb::handlers;
+using namespace metricsManager;
 
 constexpr auto DB_NAME = "TEST_DB";
 constexpr auto DB_NAME_2 = "TEST_DB_2";
@@ -81,26 +85,29 @@ inline void createKeyOnlyJsonTestFile(const std::string filePath = FILE_PATH)
 }
 
 // "managerPost" tests section
-
 class managerPost_Handler : public ::testing::Test
 {
 
 protected:
     std::shared_ptr<kvdb_manager::KVDBManager> kvdbManager;
+    std::shared_ptr<IMetricsManager> m_manager;
 
-    virtual void SetUp()
+    void SetUp() override
     {
-        fmtlog::setLogLevel(fmtlog::LogLevel(logging::LogLevel::Off));
+        m_manager = std::make_shared<MetricsManager>();
+
+        initLogging();
+
         if (std::filesystem::exists(DB_DIR))
         {
             std::filesystem::remove_all(DB_DIR);
         }
-        kvdbManager = std::make_shared<kvdb_manager::KVDBManager>(DB_DIR);
+        kvdbManager = std::make_shared<kvdb_manager::KVDBManager>(DB_DIR, m_manager);
         auto varHandle = kvdbManager->getHandler(DB_NAME, true);
         ASSERT_FALSE(std::holds_alternative<base::Error>(varHandle));
     }
 
-    virtual void TearDown()
+    void TearDown() override
     {
         if (std::filesystem::exists(FILE_PATH))
         {
@@ -385,22 +392,26 @@ protected:
     static constexpr auto DB_NAME_NOT_AVAILABLE = "TEST_DB_NOT_AVAILABLE";
 
     std::shared_ptr<kvdb_manager::KVDBManager> kvdbManager;
+    std::shared_ptr<IMetricsManager> m_manager;
 
-    virtual void SetUp()
+    void SetUp() override
     {
-        fmtlog::setLogLevel(fmtlog::LogLevel(logging::LogLevel::Off));
+        m_manager = std::make_shared<MetricsManager>();
+
+        initLogging();
+
         if (std::filesystem::exists(DB_DIR))
         {
             std::filesystem::remove_all(DB_DIR);
         }
-        kvdbManager = std::make_shared<kvdb_manager::KVDBManager>(DB_DIR);
+        kvdbManager = std::make_shared<kvdb_manager::KVDBManager>(DB_DIR, m_manager);
         auto varHandle = kvdbManager->getHandler(DB_NAME, true);
         ASSERT_FALSE(std::holds_alternative<base::Error>(varHandle));
     }
 
     size_t getNumberOfKVDBLoaded() { return kvdbManager->listDBs().size(); }
 
-    virtual void TearDown() {}
+    void TearDown() override {}
 
     api::wpRequest deleteWRequest(const std::string& kvdbName)
     {
@@ -572,10 +583,14 @@ class managerDump_Handler : public ::testing::Test
 
 protected:
     std::shared_ptr<kvdb_manager::KVDBManager> kvdbManager;
+    std::shared_ptr<IMetricsManager> m_manager;
 
-    virtual void SetUp()
+    void SetUp() override
     {
-        fmtlog::setLogLevel(fmtlog::LogLevel(logging::LogLevel::Off));
+        m_manager = std::make_shared<MetricsManager>();
+
+        initLogging();
+
         if (std::filesystem::exists(DB_DIR))
         {
             std::filesystem::remove_all(DB_DIR);
@@ -586,12 +601,12 @@ protected:
             std::filesystem::remove(FILE_PATH);
         }
 
-        kvdbManager = std::make_shared<kvdb_manager::KVDBManager>(DB_DIR);
+        kvdbManager = std::make_shared<kvdb_manager::KVDBManager>(DB_DIR, m_manager);
         auto varHandle = kvdbManager->getHandler(DB_NAME, true);
         ASSERT_FALSE(std::holds_alternative<base::Error>(varHandle));
     }
 
-    virtual void TearDown() {}
+    void TearDown() override {}
 
     api::wpRequest dumpWRequest(const std::string& kvdbName)
     {
@@ -725,19 +740,23 @@ class dbGet_Handler : public ::testing::Test
 
 protected:
     std::shared_ptr<kvdb_manager::KVDBManager> kvdbManager;
+    std::shared_ptr<IMetricsManager> m_manager;
 
-    virtual void SetUp()
+    void SetUp() override
     {
-        fmtlog::setLogLevel(fmtlog::LogLevel(logging::LogLevel::Off));
+        m_manager = std::make_shared<MetricsManager>();
+
+        initLogging();
+
         if (std::filesystem::exists(DB_DIR))
         {
             std::filesystem::remove_all(DB_DIR);
         }
-        kvdbManager = std::make_shared<kvdb_manager::KVDBManager>(DB_DIR);
+        kvdbManager = std::make_shared<kvdb_manager::KVDBManager>(DB_DIR, m_manager);
         kvdbManager->createFromJFile(DB_NAME);
     }
 
-    virtual void TearDown() {}
+    void TearDown() override {}
 
     api::wpRequest getWRequest(const std::string& kvdbName, const std::string& keyName)
     {
@@ -868,19 +887,23 @@ class dbPut_Handler : public ::testing::Test
 
 protected:
     std::shared_ptr<kvdb_manager::KVDBManager> kvdbManager;
+    std::shared_ptr<IMetricsManager> m_manager;
 
-    virtual void SetUp()
+    void SetUp() override
     {
-        fmtlog::setLogLevel(fmtlog::LogLevel(logging::LogLevel::Off));
+        m_manager = std::make_shared<MetricsManager>();
+
+        initLogging();
+
         if (std::filesystem::exists(DB_DIR))
         {
             std::filesystem::remove_all(DB_DIR);
         }
-        kvdbManager = std::make_shared<kvdb_manager::KVDBManager>(DB_DIR);
+        kvdbManager = std::make_shared<kvdb_manager::KVDBManager>(DB_DIR, m_manager);
         kvdbManager->createFromJFile(DB_NAME);
     }
 
-    virtual void TearDown() {}
+    void TearDown() override {}
 
     api::wpRequest
     insertWRequest(const std::string& kvdbName, const std::string& keyName, const std::string& keyValue = "")
@@ -1036,20 +1059,24 @@ protected:
     static constexpr auto DB_NAME_DIFFERENT_START = "NOT_TEST_DB";
 
     std::shared_ptr<kvdb_manager::KVDBManager> kvdbManager;
+    std::shared_ptr<IMetricsManager> m_manager;
 
-    virtual void SetUp()
+    void SetUp() override
     {
-        fmtlog::setLogLevel(fmtlog::LogLevel(logging::LogLevel::Off));
+        m_manager = std::make_shared<MetricsManager>();
+
+        initLogging();
+
         if (std::filesystem::exists(DB_DIR))
         {
             std::filesystem::remove_all(DB_DIR);
         }
-        kvdbManager = std::make_shared<kvdb_manager::KVDBManager>(DB_DIR);
+        kvdbManager = std::make_shared<kvdb_manager::KVDBManager>(DB_DIR, m_manager);
         auto varHandle = kvdbManager->getHandler(DB_NAME, true);
         ASSERT_FALSE(std::holds_alternative<base::Error>(varHandle));
     }
 
-    virtual void TearDown() {}
+    void TearDown() override {}
 
     api::wpRequest listWRequest(const bool& mustBeLoaded)
     {
@@ -1143,20 +1170,24 @@ class dbDelete_Handler : public ::testing::Test
 
 protected:
     std::shared_ptr<kvdb_manager::KVDBManager> kvdbManager;
+    std::shared_ptr<IMetricsManager> m_manager;
 
-    virtual void SetUp()
+    void SetUp() override
     {
-        fmtlog::setLogLevel(fmtlog::LogLevel(logging::LogLevel::Off));
+        m_manager = std::make_shared<MetricsManager>();
+
+        initLogging();
+
         if (std::filesystem::exists(DB_DIR))
         {
             std::filesystem::remove_all(DB_DIR);
         }
-        kvdbManager = std::make_shared<kvdb_manager::KVDBManager>(DB_DIR);
+        kvdbManager = std::make_shared<kvdb_manager::KVDBManager>(DB_DIR, m_manager);
         kvdbManager->createFromJFile(DB_NAME);
         kvdbManager->writeRaw(DB_NAME, KEY_A, VAL_A);
     }
 
-    virtual void TearDown() {}
+    void TearDown() override {}
 
     api::wpRequest removeWRequest(const std::string& kvdbName, const std::string& keyName)
     {
@@ -1189,7 +1220,7 @@ TEST_F(dbDelete_Handler, NameMissing)
     ASSERT_EQ(response.error(), 0);
     ASSERT_FALSE(response.message().has_value());
     ASSERT_EQ(response.data(), expectedData) << "Response: " << response.data().prettyStr() << std::endl
-                                               << "Expected: " << expectedData.prettyStr() << std::endl;
+                                             << "Expected: " << expectedData.prettyStr() << std::endl;
 }
 
 TEST_F(dbDelete_Handler, NameArrayNotString)
@@ -1198,7 +1229,8 @@ TEST_F(dbDelete_Handler, NameArrayNotString)
     ASSERT_NO_THROW(cmd = dbDelete(dbDelete_Handler::kvdbManager));
     json::Json params {R"({"name":["TEST_DB_2"]})"};
     const auto response = cmd(api::wpRequest::create(rCommand, rOrigin, params));
-    const auto expectedData = json::Json {R"({"status":"ERROR","error":"INVALID_ARGUMENT:name: Proto field is not repeating, cannot start list."})"};
+    const auto expectedData = json::Json {
+        R"({"status":"ERROR","error":"INVALID_ARGUMENT:name: Proto field is not repeating, cannot start list."})"};
 
     // check response
     ASSERT_TRUE(response.isValid());
@@ -1303,7 +1335,8 @@ TEST_F(dbDelete_Handler, RemoveNonExistingDB)
     const auto response = cmd(removeWRequest(DB_NAME_ANOTHER, KEY_A));
 
     // check response
-    const auto expectedData = json::Json {R"({"status":"ERROR","error":"Database 'ANOTHER_DB_NAME' not found or could not be loaded"})"};
+    const auto expectedData =
+        json::Json {R"({"status":"ERROR","error":"Database 'ANOTHER_DB_NAME' not found or could not be loaded"})"};
 
     // check response
     ASSERT_TRUE(response.isValid());
@@ -1333,19 +1366,8 @@ TEST_F(dbDelete_Handler, RemoveReturnsOkWithNonExistingKeyName)
 
 // registerHandlers section
 
-TEST(kvdbAPICmdsTest, registerHandlers)
+TEST_F(managerGet_Handler, registerHandlers)
 {
-    auto kvdbManager = std::make_shared<kvdb_manager::KVDBManager>(DB_DIR);
-
-    auto apiReg = std::make_shared<api::Registry>();
-
-    ASSERT_NO_THROW(registerHandlers(kvdbManager, apiReg));
-
-    ASSERT_NO_THROW(apiReg->getHandler("kvdb.manager/post"));
-    ASSERT_NO_THROW(apiReg->getHandler("kvdb.manager/delete"));
-    ASSERT_NO_THROW(apiReg->getHandler("kvdb.manager/get"));
-    ASSERT_NO_THROW(apiReg->getHandler("kvdb.manager/dump"));
-    ASSERT_NO_THROW(apiReg->getHandler("kvdb.db/put"));
-    ASSERT_NO_THROW(apiReg->getHandler("kvdb.db/delete"));
-    ASSERT_NO_THROW(apiReg->getHandler("kvdb.db/get"));
+    auto api = std::make_shared<api::Api>();
+    ASSERT_NO_THROW(registerHandlers(managerGet_Handler::kvdbManager, api));
 }

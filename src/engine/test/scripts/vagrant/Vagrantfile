@@ -47,16 +47,25 @@ Vagrant.configure("2") do |config|
 
         echo "--- Downlading the engine from github ---"
         apt-get update
-        mkdir engine && cd engine
-        git clone --branch 11334-dev-new-wazuh-engine  https://github.com/wazuh/wazuh.git
-        cd wazuh
-        cd src/engine && mkdir build
+        su vagrant -c "mkdir engine"
+        cd engine
+        su vagrant -c "git clone --branch 11334-dev-new-wazuh-engine  https://github.com/wazuh/wazuh.git"
+        # Make symbolic link to the engine folder
+        su vagrant -c "cd && ln -s engine/wazuh/src/engine/ project"
+        cd wazuh/src/engine
+        su vagrant -c "mkdir build"
         ENGINE_SRC_DIR=$(pwd)
+
+        # Install engine-schema python script
+        pip3 install --system $ENGINE_SRC_DIR/test/scripts/engine-suite
+
+        # Add autocompletion to profile
+        echo "source $ENGINE_SRC_DIR/test/scripts/vagrant/autocompletion.sh" >> /etc/profile
 
         echo "--- Building the engine from its source code ---"
         ulimit -s unlimited
-        cmake -S . -B build/
-        cmake --build build/ --config Debug --target main -j $(nproc)
+        su vagrant -c "cmake -S . -B build/"
+        su vagrant -c "cmake --build build/ --config Debug --target main -j $(nproc)"
 
         #check if main was built, if not throw error
         if [ ! -f ./build/main ]; then
@@ -100,14 +109,14 @@ Vagrant.configure("2") do |config|
         rm $WAZUH_DIR/queue/sockets/queue
         mkdir -p $ENGINE_DIR/store/schema
         mkdir $WAZUH_DIR/etc/kvdb/
-        mkdir $WAZUH_DIR/etc/kvdb/kvdb_test/
+        mkdir $WAZUH_DIR/etc/kvdb_test/
         # Copy needed files in the store so the engine can start
         mkdir $ENGINE_DIR/store/schema/wazuh-logpar-types
         cp $ENGINE_SRC_DIR/ruleset/schemas/wazuh-logpar-types.json $ENGINE_DIR/store/schema/wazuh-logpar-types/0
         mkdir $ENGINE_DIR/store/schema/wazuh-asset
         cp $ENGINE_SRC_DIR/ruleset/schemas/wazuh-asset.json $ENGINE_DIR/store/schema/wazuh-asset/0
-        mkdir $ENGINE_DIR/store/schema/wazuh-environment
-        cp $ENGINE_SRC_DIR/ruleset/schemas/wazuh-environment.json $ENGINE_DIR/store/schema/wazuh-environment/0
+        mkdir $ENGINE_DIR/store/schema/wazuh-policy
+        cp $ENGINE_SRC_DIR/ruleset/schemas/wazuh-policy.json $ENGINE_DIR/store/schema/wazuh-policy/0
 
         echo "--- Enabling the engine ---"
         cp $ENGINE_SRC_DIR/build/main $ENGINE_DIR/wazuh-engine
@@ -123,16 +132,14 @@ Vagrant.configure("2") do |config|
         sleep 2s
 
         echo "--- Loading ruleset & enabling wazuh environment  ---"
-        HOST_DATA_KVDB_NAME=agents_host_data
-        $ENGINE_DIR/wazuh-engine kvdb create -n $HOST_DATA_KVDB_NAME
-        cp -r $WAZUH_DIR/etc/kvdb/$HOST_DATA_KVDB_NAME $WAZUH_DIR/etc/kvdb/kvdb_test/
-        $ENGINE_DIR/wazuh-engine kvdb create -n auditd-types -p $ENGINE_SRC_DIR/test/kvdb_input_files/auditd/types.json
-        $ENGINE_DIR/wazuh-engine kvdb create -n auditd-syscall -p $ENGINE_SRC_DIR/test/kvdb_input_files/auditd/syscall.json
-        $ENGINE_DIR/wazuh-engine catalog load --recursive decoder $ENGINE_SRC_DIR/ruleset/decoders/
-        $ENGINE_DIR/wazuh-engine catalog load --recursive output $ENGINE_SRC_DIR/ruleset/outputs/
-        $ENGINE_DIR/wazuh-engine catalog load --recursive environment $ENGINE_SRC_DIR/ruleset/environments/
-        $ENGINE_DIR/wazuh-engine catalog load --recursive filter $ENGINE_SRC_DIR/ruleset/filters/
-        $ENGINE_DIR/wazuh-engine router add default filter/allow-all/0 255 environment/wazuh/0
+        cd $ENGINE_SRC_DIR/ruleset/wazuh-core
+        engine-integration add
+        cd $HOME
+        echo "Creating default policy..."
+        $ENGINE_DIR/wazuh-engine catalog create policy < $ENGINE_SRC_DIR/ruleset/default-policy.yml
+        echo "Enabling default environment..."
+        $ENGINE_DIR/wazuh-engine router add default filter/allow-all/0 255 policy/wazuh/0
+        cp -r $WAZUH_DIR/etc/kvdb/* $WAZUH_DIR/etc/kvdb_test/
         echo
 
         # Create folder for engine core dumps
@@ -164,12 +171,6 @@ Vagrant.configure("2") do |config|
         cat $CS_HOME/engine/wazuh/src/engine/test/scripts/vagrant/vscode-settings.json | tee $CS_HOME/engine/wazuh/src/engine/.vscode/settings.json
 
         chown -R $CS_USER:$CS_USER $CS_HOME/
-
-        # Install engine-schema python script
-        pip3 install $ENGINE_SRC_DIR/test/scripts/engine-suite
-        if ! engine-schema -h; then
-            echo "Error installing engine-schema"
-        fi
     SHELL
 
 end

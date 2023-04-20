@@ -34,24 +34,18 @@ CPMAddPackage(
 ####################################################################################################
 add_library(server STATIC
     ${ENGINE_SERVER_SOURCE_DIR}/engineServer.cpp
+    ${ENGINE_SERVER_SOURCE_DIR}/endpoint.cpp
+    ${ENGINE_SERVER_SOURCE_DIR}/endpoints/unixDatagram.cpp
+    ${ENGINE_SERVER_SOURCE_DIR}/endpoints/unixStream.cpp
     ${ENGINE_SERVER_SOURCE_DIR}/protocolHandler.cpp
-    ${ENGINE_SERVER_SOURCE_DIR}/endpoints/baseEndpoint.cpp
-    ${ENGINE_SERVER_SOURCE_DIR}/endpoints/eventEndpoint.cpp
-    ${ENGINE_SERVER_SOURCE_DIR}/endpoints/apiEndpoint.cpp
+    ${ENGINE_SERVER_SOURCE_DIR}/protocolHandlers/wStream.cpp
 )
 
 #TODO do this better
-target_link_libraries(server base uv_a api)
+target_link_libraries(server base uv_a api queue metrics)
 
 target_include_directories(server
     PUBLIC
     ${ENGINE_SERVER_INCLUDE_DIR}
-    ${CameronQueue_SOURCE_DIR}
-    PRIVATE
-    ${ENGINE_SOURCE_DIR}/json
     ${uvw_SOURCE_DIR}/src/
-    ${uvw_SOURCE_DIR}/src/uvw/ # Check This
-    ${RxCpp_SOURCE_DIR}/Rx/v2/src
-    ${ENGINE_SERVER_SOURCE_DIR}/base
-    ${ENGINE_SOURCE_DIR}/API/include
 )

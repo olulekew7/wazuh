@@ -8,6 +8,7 @@
 #include "builder/register.hpp"
 #include "builder/registry.hpp"
 #include <json/json.hpp>
+#include <testsCommon.hpp>
 
 using namespace builder;
 using namespace builder::internals;
@@ -26,6 +27,8 @@ class AssetTest : public ::testing::Test
 {
     void SetUp() override
     {
+        initLogging();
+
         if (std::filesystem::exists(outputPath))
         {
             std::filesystem::remove(outputPath);

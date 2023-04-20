@@ -1,9 +1,3 @@
-# Copyright (C) 2015-2021, Wazuh Inc.
-#
-# This program is free software; you can redistribute it
-# and/or modify it under the terms of the GNU General Public
-# License (version 2) as published by the FSF - Free Software
-# Foundation.
 # ###################################################################################################
 # Dependencies
 # ###################################################################################################
@@ -40,6 +34,7 @@ add_library(builders OBJECT
   builders/opBuilderHelperFilter.cpp
   builders/opBuilderHelperMap.cpp
   builders/opBuilderHelperNetInfoAddress.cpp
+  builders/opBuilderHelperUpgradeConfirmation.cpp
   builders/opBuilderKVDB.cpp
   builders/opBuilderLogParser.cpp
   builders/opBuilderSCAdecoder.cpp
@@ -52,7 +47,7 @@ add_library(builders OBJECT
   builders/stageBuilderOutputs.cpp
   builders/stageBuilderParse.cpp
   definitions.cpp
-  environment.cpp
+  policy.cpp
   registry.cpp
 )
 

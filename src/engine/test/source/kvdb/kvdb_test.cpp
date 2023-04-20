@@ -8,7 +8,10 @@
 #include <pthread.h> //For barrier, not strictly necessary
 
 #include <kvdb/kvdbManager.hpp>
-#include <logging/logging.hpp>
+#include <testsCommon.hpp>
+
+#include <metrics/metricsManager.hpp>
+using namespace metricsManager;
 
 // TODO: can we move this utility functions to headers accessible to tests and
 // benchmark?
@@ -92,18 +95,22 @@ class KVDBTest : public ::testing::Test
 protected:
     std::shared_ptr<kvdb_manager::KVDBManager> kvdbManager;
 
-    virtual void SetUp()
+    void SetUp() override
     {
+        initLogging();
+
         // cleaning directory in order to start without garbage.
         if (std::filesystem::exists(KVDB_PATH))
         {
             std::filesystem::remove_all(KVDB_PATH);
         }
-        kvdbManager = {std::make_shared<kvdb_manager::KVDBManager>(KVDB_PATH)};
+        std::shared_ptr<IMetricsManager> m_manager = std::make_shared<MetricsManager>();
+
+        kvdbManager = {std::make_shared<kvdb_manager::KVDBManager>(KVDB_PATH, m_manager)};
         kvdbManager->getHandler(kTestDBName, true);
     };
 
-    virtual void TearDown()
+    void TearDown() override
     {
         kvdbManager->unloadDB(kTestDBName);
         kvdbManager->deleteDB(kTestAlternativeDBName);

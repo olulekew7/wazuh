@@ -9,12 +9,12 @@
 #include <thread>
 #include <unordered_map>
 
-#include <blockingconcurrentqueue.h>
-
 #include <baseTypes.hpp>
+#include <parseEvent.hpp>
+#include <queue/concurrentQueue.hpp>
 #include <store/istore.hpp>
 
-#include "environmentManager.hpp"
+#include "policyManager.hpp"
 #include "route.hpp"
 
 namespace router
@@ -31,16 +31,16 @@ constexpr auto JSON_PATH_EVENT = "/event"; ///< Json path for the event for enqu
  * @brief Router class to manage routes and events
  *
  * The router is the main class of the router module. It manages the routes and has the logic to route the events to the
- * correct environment. Also it has the thread pool to process the events, and the environment manager to manage the
- * runtime environments (creation, destruction, and interaction).
- * Get the events from the queue, select the correct environment (with the route priority and conditions), and send the
- * event to the environment.
+ * correct policy. Also it has the thread pool to process the events, and the policy manager to manage the
+ * runtime policies (creation, destruction, and interaction).
+ * Get the events from the queue, select the correct policy (with the route priority and conditions), and send the
+ * event to the policy.
  */
 class Router
 {
 
 private:
-    using concurrentQueue = moodycamel::BlockingConcurrentQueue<base::Event>;
+    using concurrentQueue = base::queue::ConcurrentQueue<base::Event>; ///< Alias for the queue type
 
     /* Status */
     /**
@@ -57,7 +57,7 @@ private:
     std::vector<std::thread> m_threads; ///< Vector of threads for the router
 
     /* Resources */
-    std::shared_ptr<EnvironmentManager> m_environmentManager; ///< Environment manager
+    std::shared_ptr<PolicyManager> m_policyManager; ///< Policy manager
     std::shared_ptr<builder::Builder> m_builder;              ///< Builder
     std::shared_ptr<concurrentQueue> m_queue;                 ///< Queue to get events
     std::shared_ptr<store::IStore> m_store;                   ///< Store to get/save routes table
@@ -87,7 +87,7 @@ public:
     /**
      * @brief Construct a new Router with the given builder, store and number of threads for the pool
      *
-     * @param builder Builder to create the environments
+     * @param builder Builder to create the policies
      * @param store Store to get/save the routes table
      * @param threads Number of threads for the pool
      */
@@ -137,7 +137,7 @@ public:
      * @param event event to push to the queue
      * @return std::optional<base::Error> A error with description if the event can't be pushed
      */
-    std::optional<base::Error> enqueueEvent(base::Event event);
+    std::optional<base::Error> enqueueEvent(base::Event&& event);
 
     /**
      * @brief Push an event to the queue of the router
@@ -146,6 +146,27 @@ public:
      * @return std::optional<base::Error> A error with description if the event can't be pushed
      */
     std::optional<base::Error> enqueueOssecEvent(std::string_view event);
+
+    /**
+     * @brief Push an event to the queue of the router
+     *
+     * This method is inline and does not check the router && queue status
+     * @param event
+     */
+    void fastEnqueueEvent(const std::string& eventStr)
+    {
+        base::Event event;
+        try
+        {
+            event = base::parseEvent::parseOssecEvent(eventStr);
+        }
+        catch (const std::exception& e)
+        {
+            LOG_WARNING("Error parsing event: '{}' (discarting...)", e.what());
+            return;
+        }
+        m_queue->push(std::move(event));
+    }
 
     /**
      * @brief Delete a route from the router

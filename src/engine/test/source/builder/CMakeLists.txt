@@ -1,10 +1,3 @@
-# Copyright (C) 2015-2021, Wazuh Inc.
-#
-# This program is free software; you can redistribute it
-# and/or modify it under the terms of the GNU General Public
-# License (version 2) as published by the FSF - Free Software
-# Foundation.
-
 # ###################################################################################################
 # Settings
 # ###################################################################################################
@@ -29,10 +22,11 @@ include_directories(
   ${RxCpp_SOURCE_DIR}/Rx/v2/src
   ${ENGINE_SOURCE_DIR}/wdb/src
   ${TEST_SOURCE_DIR}/base/socketInterface/testAuxiliar/
+  ${TEST_SOURCE_DIR}/common/
 )
 
 # TODO do this better
-link_libraries(gtest_main gtest base builders)
+link_libraries(gtest_main gtest base builders metrics)
 
 # ###################################################################################################
 # Builder targets
@@ -110,10 +104,10 @@ add_executable(asset_test
 gtest_discover_tests(asset_test)
 
 # Environment test
-add_executable(environment_test
-  ${BUILDER_TEST_SOURCE_DIR}/environment_test.cpp
+add_executable(policy_test
+  ${BUILDER_TEST_SOURCE_DIR}/policy_test.cpp
 )
-gtest_discover_tests(environment_test)
+gtest_discover_tests(policy_test)
 
 add_executable(baseHelper_test
   ${BUILDER_BUILDERS_TEST_SOURCE_DIR}/baseHelper_test.cpp
@@ -220,3 +214,9 @@ add_executable(opBuilderHelperNetInfoAddress_test
   ${TEST_SOURCE_DIR}/base/socketInterface/testAuxiliar/socketAuxiliarFunctions.cpp
 )
 gtest_discover_tests(opBuilderHelperNetInfoAddress_test)
+
+add_executable(opBuilderHelperUpgradeConfirmation_test
+  ${BUILDER_BUILDERS_TEST_SOURCE_DIR}/opBuilderHelperUpgradeConfirmation_test.cpp
+  ${TEST_SOURCE_DIR}/base/socketInterface/testAuxiliar/socketAuxiliarFunctions.cpp
+)
+gtest_discover_tests(opBuilderHelperUpgradeConfirmation_test)

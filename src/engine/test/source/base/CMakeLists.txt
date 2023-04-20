@@ -4,6 +4,8 @@ set(SHARED_ENGINE_SOURCE_DIR ${ENGINE_SOURCE_DIR}/base/utils)
 # Builder targets
 ####################################################################################################
 # Builder test
+include_directories(${TEST_SOURCE_DIR}/common)
+
 add_executable(stringUtils_test
   stringUtils_test.cpp
   ${SHARED_ENGINE_SOURCE_DIR}/stringUtils.cpp

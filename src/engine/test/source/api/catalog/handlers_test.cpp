@@ -2,11 +2,21 @@
 
 #include <api/catalog/handlers.hpp>
 #include <gtest/gtest.h>
+#include <testsCommon.hpp>
 
 const std::string rCommand {"dummy cmd"};
 const std::string rOrigin {"Dummy org module"};
 
-TEST(Handlers, resourseGet)
+class Handlers : public ::testing::Test
+{
+
+protected:
+    void SetUp() override { initLogging(); }
+
+    void TearDown() override {}
+};
+
+TEST_F(Handlers, resourseGet)
 {
     auto config = getConfig();
     auto catalog = std::make_shared<api::catalog::Catalog>(config);
@@ -31,7 +41,7 @@ TEST(Handlers, resourseGet)
                                              << "Actual: " << response.data().prettyStr() << std::endl;
 }
 
-TEST(Handlers, resourseGet_Persist)
+TEST_F(Handlers, resourseGet_Persist)
 {
     api::Handler cmd;
     base::Name name({api::catalog::Resource::typeToStr(api::catalog::Resource::Type::decoder),
@@ -56,7 +66,7 @@ TEST(Handlers, resourseGet_Persist)
                                              << "Actual: " << response.data().prettyStr() << std::endl;
 }
 
-TEST(Handlers, resourseGet_MissingName)
+TEST_F(Handlers, resourseGet_MissingName)
 {
     auto config = getConfig();
     auto catalog = std::make_shared<api::catalog::Catalog>(config);
@@ -74,7 +84,7 @@ TEST(Handlers, resourseGet_MissingName)
                                              << "Actual: " << response.data().prettyStr() << std::endl;
 }
 
-TEST(Handlers, resourseGet_MissingFormat)
+TEST_F(Handlers, resourseGet_MissingFormat)
 {
     auto config = getConfig();
     auto catalog = std::make_shared<api::catalog::Catalog>(config);
@@ -95,7 +105,7 @@ TEST(Handlers, resourseGet_MissingFormat)
                                              << "Actual: " << response.data().prettyStr() << std::endl;
 }
 
-TEST(Handlers, resourseGet_CatalogError)
+TEST_F(Handlers, resourseGet_CatalogError)
 {
     auto config = getConfig();
     auto catalog = std::make_shared<api::catalog::Catalog>(config);
@@ -106,7 +116,7 @@ TEST(Handlers, resourseGet_CatalogError)
     json::Json params {fmt::format("{{\"name\": \"{}\", \"format\": \"json\"}}", name.fullName()).c_str()};
     auto response = api::catalog::handlers::resourceGet(catalog)(api::wpRequest::create(rCommand, rOrigin, params));
     const auto expectedData = json::Json(
-        R"({"status":"ERROR","error":"Content \"decoder/name/fail\" could not be obtained from store: error"})");
+        R"({"status":"ERROR","error":"Content 'decoder/name/fail' could not be obtained from store: error"})");
 
     // check response
     ASSERT_TRUE(response.isValid());
@@ -116,7 +126,7 @@ TEST(Handlers, resourseGet_CatalogError)
                                              << "Actual: " << response.data().prettyStr() << std::endl;
 }
 
-TEST(Handlers, resourseGet_InvalidFormat)
+TEST_F(Handlers, resourseGet_InvalidFormat)
 {
     auto config = getConfig();
     auto catalog = std::make_shared<api::catalog::Catalog>(config);
@@ -136,7 +146,7 @@ TEST(Handlers, resourseGet_InvalidFormat)
                                              << "Actual: " << response.data().prettyStr() << std::endl;
 }
 
-TEST(Handlers, resourseGet_InvalidName)
+TEST_F(Handlers, resourseGet_InvalidName)
 {
     auto config = getConfig();
     auto catalog = std::make_shared<api::catalog::Catalog>(config);
@@ -153,7 +163,7 @@ TEST(Handlers, resourseGet_InvalidName)
                                              << "Actual: " << response.data().prettyStr() << std::endl;
 }
 
-TEST(Handlers, resourcePost)
+TEST_F(Handlers, resourcePost)
 {
     auto config = getConfig();
     auto catalog = std::make_shared<api::catalog::Catalog>(config);
@@ -179,7 +189,7 @@ TEST(Handlers, resourcePost)
                                              << "Actual: " << response.data().prettyStr() << std::endl;
 }
 
-TEST(Handlers, resourcePost_Persist)
+TEST_F(Handlers, resourcePost_Persist)
 {
     api::Handler cmd;
     base::Name name(api::catalog::Resource::typeToStr(api::catalog::Resource::Type::decoder));
@@ -206,7 +216,7 @@ TEST(Handlers, resourcePost_Persist)
                                              << "Actual: " << response.data().prettyStr() << std::endl;
 }
 
-TEST(Handlers, resourcePost_NotCollectionType)
+TEST_F(Handlers, resourcePost_NotCollectionType)
 {
     auto config = getConfig();
     auto catalog = std::make_shared<api::catalog::Catalog>(config);
@@ -230,7 +240,7 @@ TEST(Handlers, resourcePost_NotCollectionType)
                                              << "Actual: " << response.data().prettyStr() << std::endl;
 }
 
-TEST(Handlers, resourcePost_MissingType)
+TEST_F(Handlers, resourcePost_MissingType)
 {
     auto config = getConfig();
     auto catalog = std::make_shared<api::catalog::Catalog>(config);
@@ -253,7 +263,7 @@ TEST(Handlers, resourcePost_MissingType)
                                              << "Actual: " << response.data().prettyStr() << std::endl;
 }
 
-TEST(Handlers, resourcePost_MissingFormat)
+TEST_F(Handlers, resourcePost_MissingFormat)
 {
     auto config = getConfig();
     auto catalog = std::make_shared<api::catalog::Catalog>(config);
@@ -278,7 +288,7 @@ TEST(Handlers, resourcePost_MissingFormat)
                                              << "Actual: " << response.data().prettyStr() << std::endl;
 }
 
-TEST(Handlers, resourcePost_MissingContent)
+TEST_F(Handlers, resourcePost_MissingContent)
 {
     auto config = getConfig();
     auto catalog = std::make_shared<api::catalog::Catalog>(config);
@@ -303,7 +313,7 @@ TEST(Handlers, resourcePost_MissingContent)
                                              << "Actual: " << response.data().prettyStr() << std::endl;
 }
 
-TEST(Handlers, resourcePut)
+TEST_F(Handlers, resourcePut)
 {
     auto config = getConfig();
     auto catalog = std::make_shared<api::catalog::Catalog>(config);
@@ -331,7 +341,7 @@ TEST(Handlers, resourcePut)
                                              << "Actual: " << response.data().prettyStr() << std::endl;
 }
 
-TEST(Handlers, resourcePut_Persist)
+TEST_F(Handlers, resourcePut_Persist)
 {
     api::Handler cmd;
     base::Name name({api::catalog::Resource::typeToStr(api::catalog::Resource::Type::decoder),
@@ -360,7 +370,7 @@ TEST(Handlers, resourcePut_Persist)
                                              << "Actual: " << response.data().prettyStr() << std::endl;
 }
 
-TEST(Handlers, resourcePut_Collection)
+TEST_F(Handlers, resourcePut_Collection)
 {
     auto config = getConfig();
     auto catalog = std::make_shared<api::catalog::Catalog>(config);
@@ -377,7 +387,7 @@ TEST(Handlers, resourcePut_Collection)
     ASSERT_NO_THROW(cmd(api::wpRequest::create(rCommand, rOrigin, params)));
     auto response = cmd(api::wpRequest::create(rCommand, rOrigin, params));
     const auto expectedData =
-        json::Json(R"({"status":"ERROR","error":"Invalid resource type \"collection\" for PUT operation"})");
+        json::Json(R"({"status":"ERROR","error":"Invalid resource type 'collection' for PUT operation"})");
 
     // check response
     ASSERT_TRUE(response.isValid());
@@ -387,7 +397,7 @@ TEST(Handlers, resourcePut_Collection)
                                              << "Actual: " << response.data().prettyStr() << std::endl;
 }
 
-TEST(Handlers, resourcePut_MissingName)
+TEST_F(Handlers, resourcePut_MissingName)
 {
     auto config = getConfig();
     auto catalog = std::make_shared<api::catalog::Catalog>(config);
@@ -410,7 +420,7 @@ TEST(Handlers, resourcePut_MissingName)
                                              << "Actual: " << response.data().prettyStr() << std::endl;
 }
 
-TEST(Handlers, resourcePut_MissingFormat)
+TEST_F(Handlers, resourcePut_MissingFormat)
 {
     auto config = getConfig();
     auto catalog = std::make_shared<api::catalog::Catalog>(config);
@@ -435,7 +445,7 @@ TEST(Handlers, resourcePut_MissingFormat)
                                              << "Actual: " << response.data().prettyStr() << std::endl;
 }
 
-TEST(Handlers, resourcePut_MissingContent)
+TEST_F(Handlers, resourcePut_MissingContent)
 {
     auto config = getConfig();
     auto catalog = std::make_shared<api::catalog::Catalog>(config);
@@ -460,7 +470,7 @@ TEST(Handlers, resourcePut_MissingContent)
                                              << "Actual: " << response.data().prettyStr() << std::endl;
 }
 
-TEST(Handlers, resourceDelete)
+TEST_F(Handlers, resourceDelete)
 {
     auto config = getConfig();
     auto catalog = std::make_shared<api::catalog::Catalog>(config);
@@ -486,7 +496,7 @@ TEST(Handlers, resourceDelete)
                                              << "Actual: " << response.data().prettyStr() << std::endl;
 }
 
-TEST(Handlers, resourceDelete_Persist)
+TEST_F(Handlers, resourceDelete_Persist)
 {
     api::Handler cmd;
     base::Name name({api::catalog::Resource::typeToStr(api::catalog::Resource::Type::decoder),
@@ -513,7 +523,7 @@ TEST(Handlers, resourceDelete_Persist)
                                              << "Actual: " << response.data().prettyStr() << std::endl;
 }
 
-TEST(Handlers, resourceDelete_Collection)
+TEST_F(Handlers, resourceDelete_Collection)
 {
     auto config = getConfig();
     auto catalog = std::make_shared<api::catalog::Catalog>(config);
@@ -537,7 +547,7 @@ TEST(Handlers, resourceDelete_Collection)
                                              << "Actual: " << response.data().prettyStr() << std::endl;
 }
 
-TEST(Handlers, resourceDelete_MissingName)
+TEST_F(Handlers, resourceDelete_MissingName)
 {
     auto config = getConfig();
     auto catalog = std::make_shared<api::catalog::Catalog>(config);
@@ -558,17 +568,10 @@ TEST(Handlers, resourceDelete_MissingName)
                                              << "Actual: " << response.data().prettyStr() << std::endl;
 }
 
-TEST(Handlers, registerHandlers)
+TEST_F(Handlers, registerHandlers)
 {
     auto config = getConfig();
     auto catalog = std::make_shared<api::catalog::Catalog>(config);
-    auto apiReg = std::make_shared<api::Registry>();
-
-    ASSERT_NO_THROW(api::catalog::handlers::registerHandlers(catalog, apiReg));
-    api::Handler cmd;
-    ASSERT_NO_THROW(cmd = apiReg->getHandler("catalog.resource/post"));
-    ASSERT_NO_THROW(cmd = apiReg->getHandler("catalog.resource/get"));
-    ASSERT_NO_THROW(cmd = apiReg->getHandler("catalog.resource/put"));
-    ASSERT_NO_THROW(cmd = apiReg->getHandler("catalog.resource/delete"));
-    ASSERT_NO_THROW(cmd = apiReg->getHandler("catalog.resource/validate"));
+    auto api = std::make_shared<api::Api>();
+    ASSERT_NO_THROW(api::catalog::handlers::registerHandlers(catalog, api));
 }

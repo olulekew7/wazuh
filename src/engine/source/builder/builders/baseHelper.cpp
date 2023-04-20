@@ -1,12 +1,3 @@
-/* Copyright (C) 2015-2021, Wazuh Inc.
- * All rights reserved.
- *
- * This program is free software; you can redistribute it
- * and/or modify it under the terms of the GNU General Public
- * License (version 2) as published by the FSF - Free Software
- * Foundation.
- */
-
 #include "baseHelper.hpp"
 
 #include <algorithm>
@@ -64,12 +55,6 @@ std::vector<Parameter> processParameters(const std::string name,
                                                "Json pointer path: {}",
                                                parameter,
                                                e.what()));
-
-                               throw(std::runtime_error(
-                                   fmt::format("Cannot format parameter \"{}\" to Json "
-                                               "pointer path: {}",
-                                               parameter,
-                                               e.what())));
                            }
                            return {Parameter::Type::REFERENCE, pointerPath};
                        }

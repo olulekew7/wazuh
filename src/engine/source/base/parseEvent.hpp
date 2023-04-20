@@ -8,20 +8,18 @@
 
 namespace base::parseEvent
 {
-
-constexpr char EVENT_AGENT_ID[] {"/agent/id"};
-constexpr char EVENT_AGENT_NAME[] {"/agent/name"};
-constexpr char EVENT_LOG[] {"/event/original"};
 constexpr char EVENT_QUEUE_ID[] {"/wazuh/queue"};
-constexpr char EVENT_REGISTERED_IP[] {"/agent/registeredIP"};
-constexpr char EVENT_ORIGIN[] {"/wazuh/origin"};
+constexpr char EVENT_LOCATION_ID[] {"/wazuh/location"};
+constexpr char EVENT_MESSAGE_ID[] {"/wazuh/message"};
+
 /**
- * @brief generate a json::Document from internal state
+ * @brief Parse an OSSEC message and extract the queue, location and message
  *
- * @return json::Document
+ * @param event OSSEC message
+ * @return Event Event object
  */
 Event parseOssecEvent(const std::string& event);
 
-} // namespace base
+} // namespace base::parseEvent
 
 #endif // _EVENT_UTILS_H

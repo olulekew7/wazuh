@@ -12,6 +12,11 @@
 #include <json/json.hpp>
 #include <kvdb/kvdb.hpp>
 
+namespace metricsManager
+{
+    class IMetricsManager;
+}
+
 namespace kvdb_manager
 {
 
@@ -53,7 +58,7 @@ class KVDBManager
     KVDBHandle getDB(const std::string& name);
 
 public:
-    KVDBManager(const std::filesystem::path& dbStoragePath);
+    KVDBManager(const std::filesystem::path& dbStoragePath, const std::shared_ptr<metricsManager::IMetricsManager>& metricsManager);
     ~KVDBManager() = default;
 
     /**
@@ -212,6 +217,8 @@ public:
             m_dbs.clear();
         }
     }
+
+    std::shared_ptr<metricsManager::IMetricsScope> m_spMetricsScope;
 };
 
 } // namespace kvdb_manager

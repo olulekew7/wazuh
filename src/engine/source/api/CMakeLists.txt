@@ -20,11 +20,15 @@ CPMAddPackage(
 # Sources - Includes
 # ###################################################################################################
 add_library(api STATIC
+    ${ENGINE_API_SOURCE_DIR}/api.cpp
     ${ENGINE_API_SOURCE_DIR}/registry.cpp
     ${ENGINE_API_SOURCE_DIR}/catalog/catalog.cpp
     ${ENGINE_API_SOURCE_DIR}/catalog/handlers.cpp
     ${ENGINE_API_SOURCE_DIR}/kvdb/handlers.cpp
     ${ENGINE_API_SOURCE_DIR}/router/handlers.cpp
+    ${ENGINE_API_SOURCE_DIR}/metrics/handlers.cpp
+    ${ENGINE_API_SOURCE_DIR}/integration/integration.cpp
+    ${ENGINE_API_SOURCE_DIR}/integration/handlers.cpp
 )
 
 target_include_directories(api
@@ -35,6 +39,8 @@ target_include_directories(api
     ${ENGINE_API_SOURCE_DIR}/catalog
     ${ENGINE_API_SOURCE_DIR}/kvdb
     ${ENGINE_API_SOURCE_DIR}/router
+    ${ENGINE_API_SOURCE_DIR}/metrics
+    ${ENGINE_API_SOURCE_DIR}/integration
 )
 
-target_link_libraries(api base json builder::ivalidator store::istore yaml-cpp fmt kvdb router eMessages)
+target_link_libraries(api base json builder::ivalidator store::istore yaml-cpp fmt kvdb router eMessages metrics)

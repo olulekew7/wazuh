@@ -11,6 +11,7 @@
 
 #include <kvdb/kvdb.hpp>
 #include <logging/logging.hpp>
+#include <metrics/metricsManager.hpp>
 #include <utils/baseMacros.hpp>
 #include <utils/stringUtils.hpp>
 
@@ -27,7 +28,7 @@ constexpr bool DONT_CREATE_IF_MISSING {false};
 
 } // namespace
 
-KVDBManager::KVDBManager(const std::filesystem::path& dbStoragePath)
+KVDBManager::KVDBManager(const std::filesystem::path& dbStoragePath, const std::shared_ptr<metricsManager::IMetricsManager>& metricsManager)
 {
     // TODO should we read and load all the dbs inside the folder?
     // shouldn't be better to just load the configured ones at start instead?
@@ -35,31 +36,36 @@ KVDBManager::KVDBManager(const std::filesystem::path& dbStoragePath)
     // TODO Remove this when Engine is integrated in Wazuh installation
     std::filesystem::create_directories(dbStoragePath);
     m_dbStoragePath = dbStoragePath;
+
+    m_spMetricsScope = metricsManager->getMetricsScope("KVDB");
 }
 
 KVDBHandle KVDBManager::loadDB(const std::string& name, bool createIfMissing)
 {
+    auto createdDatabases = m_spMetricsScope->getCounterUInteger("CreatedDatabases");
+    auto databasesInUse = m_spMetricsScope->getUpDownCounterInteger("DatabasesInUse");
+
     std::unique_lock lkW(m_mtx);
     const bool isLoaded = m_dbs.find(name) != m_dbs.end();
 
     if (isLoaded)
     {
-        WAZUH_LOG_DEBUG("Engine KVDB manager: '{}' method: Database with name '{}' "
-                        "already loaded.",
-                        __func__,
-                        name);
+        LOG_DEBUG("Engine KVDB manager: '{}' method: Database with name '{}' already loaded.", __func__, name);
         return nullptr;
     }
 
-    WAZUH_LOG_DEBUG("Engine KVDB manager: '{}' method: Loading database '{}' to the "
-                    "available databases list.",
-                    __func__,
-                    name);
+    LOG_DEBUG(
+        "Engine KVDB manager: '{}' method: Loading database '{}' to the available databases list.", __func__, name);
     auto kvdb = std::make_shared<KVDB>(name, m_dbStoragePath);
-    auto result = kvdb->init(createIfMissing);
+    auto result = kvdb->init(createIfMissing, false, m_spMetricsScope);
     if (KVDB::CreationStatus::OkInitialized == result
         || KVDB::CreationStatus::OkCreated == result)
     {
+        // This instrument measures the number of KVDB created
+        createdDatabases->addValue(1UL);
+        // This instrument measures the current number of active KVDB
+        databasesInUse->addValue(1L);
+
         m_dbs[name] = kvdb;
         return kvdb;
     }
@@ -72,9 +78,14 @@ void KVDBManager::unloadDB(const std::string& name)
     std::unique_lock lkW(m_mtx);
     const bool isLoaded = m_dbs.find(name) != m_dbs.end();
 
+    auto databasesInUse = m_spMetricsScope->getUpDownCounterInteger("DatabasesInUse");
+
     if (isLoaded)
     {
         m_dbs.erase(name);
+
+        // This instrument measures the current number of active KVDB
+        databasesInUse->addValue(-1L);
     }
 }
 
@@ -95,10 +106,8 @@ KVDBHandle KVDBManager::getDB(const std::string& name)
             if (initResult != KVDB::CreationStatus::OkCreated
                 || initResult != KVDB::CreationStatus::OkInitialized)
             {
-                WAZUH_LOG_ERROR("Engine KVDB manager: '{}' method: Error initializing "
-                                "database '{}'.",
-                                __func__,
-                                db->getName());
+                LOG_ERROR(
+                    "Engine KVDB manager: '{}' method: Error initializing database '{}'.", __func__, db->getName());
                 return nullptr;
             }
         }
@@ -185,8 +194,7 @@ std::optional<base::Error> KVDBManager::createFromJFile(const std::string& dbNam
         }
         else
         {
-            return base::Error {fmt::format(
-                "An error occurred while opening the file '{}'", path.c_str())};
+            return base::Error {fmt::format("An error occurred while opening the file '{}'", path.c_str())};
         }
 
         json::Json jKv;
@@ -196,16 +204,13 @@ std::optional<base::Error> KVDBManager::createFromJFile(const std::string& dbNam
         }
         catch (const std::exception& e)
         {
-            return base::Error {fmt::format(
-                "An error occurred while parsing the JSON file '{}'", path.c_str())};
+            return base::Error {fmt::format("An error occurred while parsing the JSON file '{}'", path.c_str())};
         }
 
         if (!jKv.isObject())
         {
             return base::Error {
-                fmt::format("An error occurred while parsing the JSON file '{}': "
-                            "JSON is not an object",
-                            path.c_str())};
+                fmt::format("An error occurred while parsing the JSON file '{}': JSON is not an object", path.c_str())};
         }
 
         entries = jKv.getObject().value();
@@ -271,8 +276,7 @@ std::optional<base::Error> KVDBManager::writeRaw(const std::string& name,
     {
         return std::nullopt;
     }
-    return base::Error {
-        fmt::format("Could not write key '{}' to database '{}'", key, name)};
+    return base::Error {fmt::format("Could not write key '{}' to database '{}'", key, name)};
 }
 
 std::optional<base::Error> KVDBManager::writeKey(const std::string& name,
@@ -322,10 +326,7 @@ std::variant<json::Json, base::Error> KVDBManager::getJValue(const std::string& 
     catch (const std::exception& e)
     {
         return base::Error {fmt::format(
-            "Could not parse value '{}' from database '{}' (corrupted value: '{}')",
-            key,
-            value.c_str(),
-            name)};
+            "Could not parse value '{}' from database '{}' (corrupted value: '{}')", key, value.c_str(), name)};
     }
 
     return jValue;
@@ -341,7 +342,6 @@ std::optional<base::Error> KVDBManager::deleteKey(const std::string& name,
         return std::get<base::Error>(handle);
     }
     auto& kvdb = std::get<KVDBHandle>(handle);
-
     return kvdb->deleteKey(key);
 }
 
@@ -366,6 +366,7 @@ bool KVDBManager::exist(const std::string& name)
 
 std::optional<base::Error> KVDBManager::deleteDB(const std::string& name)
 {
+    auto databasesInUse = m_spMetricsScope->getUpDownCounterInteger("DatabasesInUse");
     const auto MAX_USE_COUNT = 2; // 1 for the map and 1 for getHandler
 
     auto res = getHandler(name);
@@ -378,9 +379,8 @@ std::optional<base::Error> KVDBManager::deleteDB(const std::string& name)
     auto& handler = std::get<KVDBHandle>(res);
     if (handler.use_count() > MAX_USE_COUNT)
     {
-        return base::Error {fmt::format("Database '{}' is already in use '{}' times",
-                                        name,
-                                        handler.use_count() - MAX_USE_COUNT)};
+        return base::Error {
+            fmt::format("Database '{}' is already in use '{}' times", name, handler.use_count() - MAX_USE_COUNT)};
     }
 
     // Delete the reference of the database list
@@ -392,13 +392,15 @@ std::optional<base::Error> KVDBManager::deleteDB(const std::string& name)
         if (handler.use_count() == MAX_USE_COUNT)
         {
             m_dbs.erase(name);
+
+            // This instrument measures the current number of active KVDB
+            databasesInUse->addValue(-1L);
         }
         else
         {
 
-            return base::Error {fmt::format("Database '{}' is already in use '{}' times",
-                                            name,
-                                            handler.use_count() - MAX_USE_COUNT)};
+            return base::Error {
+                fmt::format("Database '{}' is already in use '{}' times", name, handler.use_count() - MAX_USE_COUNT)};
         }
     }
     // Mark for deletion

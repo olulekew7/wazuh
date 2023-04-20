@@ -10,12 +10,12 @@ namespace cmd::test
 {
 
 /**
- * @brief Run environment in test mode. Inputs from stdin, outputs event to stdout and
+ * @brief Run policy in test mode. Inputs from stdin, outputs event to stdout and
  * debug to stderr.
  *
  * @param kvdbPath Path to KVDB folder.
  * @param fileStorage Path to asset folders.
- * @param environment Name of the environment to be loaded.
+ * @param policy Name of the policy to be loaded.
  * @param logLevel Log level.
  * @param debugLevel Debug level.
  * @param assetTrace Trace specific assets.
@@ -26,8 +26,8 @@ struct Options
 {
     std::string kvdbPath;
     std::string fileStorage;
-    std::string environment;
-    int logLevel;
+    std::string policy;
+    std::string logLevel;
     int debugLevel;
     std::vector<std::string> assetTrace;
     char protocolQueue;

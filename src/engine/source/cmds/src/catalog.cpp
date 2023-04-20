@@ -18,6 +18,8 @@
 #include "utils.hpp"
 #include <cmds/apiExcept.hpp>
 #include <cmds/apiclnt/client.hpp>
+#include <logging/logging.hpp>
+
 
 namespace cmd::catalog
 {
@@ -29,14 +31,16 @@ namespace
 
 struct Options
 {
-    std::string apiEndpoint;
+    std::string serverApiSock;
     std::string format;
-    int logLevel {};
+    std::string logLevel;
     std::string name;
     std::string content;
     std::string path;
     bool recursive;
     bool abortOnError;
+    std::string policy;
+    std::string integration;
 };
 
 eCatalog::ResourceFormat toResourceFormat(const std::string& format)
@@ -55,7 +59,7 @@ eCatalog::ResourceFormat toResourceFormat(const std::string& format)
 /**
  * @brief Convert a string to a ResourceType.
  *
- * decoder, rule, filter, output, environment, schema, collection
+ * decoder, rule, filter, output, policy, schema, collection
  * @param type
  * @return eCatalog::ResourceType
  */
@@ -77,13 +81,17 @@ eCatalog::ResourceType toResourceType(const std::string& type)
     {
         return eCatalog::ResourceType::output;
     }
-    else if (type == "environment")
+    else if (type == "policy")
     {
-        return eCatalog::ResourceType::environment;
+        return eCatalog::ResourceType::policy;
     }
     else if (type == "schema")
     {
         return eCatalog::ResourceType::schema;
+    }
+    else if (type == "integration")
+    {
+        return eCatalog::ResourceType::integration;
     }
     // else if (type == "collection")
     //{
@@ -108,7 +116,6 @@ void readCinIfEmpty(std::string& content)
 }
 
 } // namespace
-
 
 void runGet(std::shared_ptr<apiclnt::Client> client, const std::string& format, const std::string& nameStr)
 {
@@ -215,6 +222,8 @@ void runLoad(std::shared_ptr<apiclnt::Client> client,
              bool recursive,
              bool abortOnError)
 {
+
+
     using RequestType = eCatalog::ResourcePost_Request;
     using ResponseType = eEngine::GenericStatus_Response;
     const std::string command = "catalog.resource/post";
@@ -270,14 +279,14 @@ void runLoad(std::shared_ptr<apiclnt::Client> client,
             // If error ignore entry and continue
             if (ec)
             {
-            const auto msg = std::string {"Failed to read entry "} + dirEntry.path().string() + ": " + ec.message();
-            ec.clear();
-            if (abortOnError)
-            {
-                throw ClientException(msg, ClientException::Type::PATH_ERROR);
-            }
-            std::cerr << msg << std::endl;
-            return;
+                const auto msg = std::string {"Failed to read entry "} + dirEntry.path().string() + ": " + ec.message();
+                ec.clear();
+                if (abortOnError)
+                {
+                    throw ClientException(msg, ClientException::Type::PATH_ERROR);
+                }
+                std::cerr << msg << std::endl;
+                return;
             }
 
             // Read file content
@@ -293,7 +302,7 @@ void runLoad(std::shared_ptr<apiclnt::Client> client,
                 ec.clear();
                 if (abortOnError)
                 {
-                throw ClientException(msg, ClientException::Type::PATH_ERROR);
+                    throw ClientException(msg, ClientException::Type::PATH_ERROR);
                 }
                 std::cerr << msg << std::endl;
                 return;
@@ -307,7 +316,8 @@ void runLoad(std::shared_ptr<apiclnt::Client> client,
 
             try
             {
-                const auto request = utils::apiAdapter::toWazuhRequest<RequestType>(command, details::ORIGIN_NAME, eRequest);
+                const auto request =
+                    utils::apiAdapter::toWazuhRequest<RequestType>(command, details::ORIGIN_NAME, eRequest);
                 const auto response = client->send(request);
                 utils::apiAdapter::fromWazuhResponse<ResponseType>(response);
             }
@@ -315,19 +325,20 @@ void runLoad(std::shared_ptr<apiclnt::Client> client,
             {
                 switch (e.getErrorType())
                 {
-                case ClientException::Type::SOCKET_COMMUNICATION_ERROR:
-                    // Fatal error, stop iterating, rethrow
-                    throw;
-                default:
-                    // Non fatal error, continue iterating
-                    const auto msg = std::string {"Failed to read entry "} + dirEntry.path().string() + ": " + e.what();
-                    ec.clear();
-                    if (abortOnError)
-                    {
-                        throw ClientException(msg, ClientException::Type::PATH_ERROR);
-                    }
-                    std::cerr << msg << std::endl;
-                    break;
+                    case ClientException::Type::SOCKET_COMMUNICATION_ERROR:
+                        // Fatal error, stop iterating, rethrow
+                        throw;
+                    default:
+                        // Non fatal error, continue iterating
+                        const auto msg =
+                            std::string {"Failed to read entry "} + dirEntry.path().string() + ": " + e.what();
+                        ec.clear();
+                        if (abortOnError)
+                        {
+                            throw ClientException(msg, ClientException::Type::PATH_ERROR);
+                        }
+                        std::cerr << msg << std::endl;
+                        break;
                 }
                 return;
             }
@@ -365,10 +376,10 @@ void configure(CLI::App_p app)
 
     // Shared options
     // Endpoint
-    catalogApp->add_option("-a, --api_socket", options->apiEndpoint, "Sets the API server socket address.")
-        ->default_val(ENGINE_API_SOCK)
+    catalogApp->add_option("-a, --api_socket", options->serverApiSock, "Sets the API server socket address.")
+        ->default_val(ENGINE_SRV_API_SOCK)
         ->check(CLI::ExistingFile);
-    const auto client = std::make_shared<apiclnt::Client>(options->apiEndpoint);
+    const auto client = std::make_shared<apiclnt::Client>(options->serverApiSock);
 
     // format
     catalogApp->add_option("-f, --format", options->format, "Sets the format of the input/output.")
@@ -376,11 +387,9 @@ void configure(CLI::App_p app)
         ->check(CLI::IsMember({"json", "yaml"}));
 
     // Log level
-    catalogApp
-        ->add_option(
-            "-l, --log_level", options->logLevel, "Sets the logging level: 0 = Debug, 1 = Info, 2 = Warning, 3 = Error")
-        ->default_val(3)
-        ->check(CLI::Range(0, 3));
+    catalogApp->add_option("-l, --log_level", options->logLevel, "Sets the logging level.")
+        ->default_val(ENGINE_LOG_LEVEL)
+        ->check(CLI::IsMember({"trace", "debug", "info", "warning", "error", "critical", "off"}));
 
     // Shared option definitions among subcommands
     auto name = "name";
@@ -453,7 +462,7 @@ void configure(CLI::App_p app)
                      nameDesc
                          + "type of the items collection: item-type. The supported item "
                            "types are: \"decoder\", \"rule\", \"filter\", \"output\", "
-                           "\"schema\" and \"environment\".")
+                           "\"schema\" and \"policy\".")
         ->required();
     load_subcommand->add_option("path", options->path, "Sets the path to the directory containing the item files.")
         ->required()

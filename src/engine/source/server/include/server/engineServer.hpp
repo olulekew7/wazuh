@@ -1,92 +1,83 @@
-/* Copyright (C) 2015-2022, Wazuh Inc.
- * All rights reserved.
- *
- * This program is free software; you can redistribute it
- * and/or modify it under the terms of the GNU General Public
- * License (version 2) as published by the FSF - Free Software
- * Foundation.
- */
+#ifndef _SERVER_SERVER_H
+#define _SERVER_SERVER_H
 
-#ifndef _ENGINE_SERVER_H
-#define _ENGINE_SERVER_H
-
-#include <map>
+#include <functional>
+#include <memory>
 #include <string>
 
-#include <blockingconcurrentqueue.h>
+#include <uvw.hpp>
+#include <uvw/async.hpp>
 
-#include <api/api.hpp>
-#include <baseTypes.hpp>
-#include "../../src/endpoints/baseEndpoint.hpp"
+#include <server/endpoint.hpp>
 
-/**
- * @brief Defines all related server functionality.
- *
- */
 namespace engineserver
 {
-// (ceil(N / BLOCK_SIZE) - 1 + 2 * MAX_NUM_PRODUCERS) * BLOCK_SIZE
-constexpr uint32_t DEFAULT_QUEUE_SIZE = 1024;
-
-enum class EndpointType
-{
-    API,
-    EVENT
-};
-
 /**
- * @brief Class that handles all endpoints and exposes Server functionality.
+ * @brief The EngineServer class is the main class of the server. It is responsible for managing the endpoints and the
+ * main loop.
  *
+ * The EngineServer class is the main class of the server. It is responsible for managing the endpoints and the main
+ * loop. The main loop is implemented using uvw, a C++ wrapper for libuv. The loop is the default loop of the
+ * application.
+ *
+ * @warning the default loop is a singleton. This means that the loop is shared between all the classes of the
  */
 class EngineServer
 {
+    /**
+     * @brief The Status enum is used to keep track of the status of the server.
+     */
+    enum class Status
+    {
+        STOPPED,
+        RUNNING,
+        STOPPING
+    };
+
 private:
-    std::unordered_map<EndpointType, std::shared_ptr<endpoints::BaseEndpoint>>
-        m_endpoints;
+    std::shared_ptr<uvw::Loop> m_loop; ///< The main loop of the application.
+    Status m_status; ///< The status of the server.
+    std::shared_ptr<uvw::AsyncHandle> m_stopHandle; ///< The handle used to stop the server.
+    std::unordered_map<std::string, std::shared_ptr<Endpoint>> m_endpoints; ///< The endpoints of the server.
+
+    void stop();
 
 public:
     /**
      * @brief Construct a new Engine Server object
+     * @param threadPoolSize The size of the thread pool worker. This is the number of threads that will be used
+     * to process the requests if the request is not processed in the main thread.
      *
-     * @param config <type>:<path> string describing endpoint type with it
-     * associated configuration.
-     *
-     * @param bufferSize Events queue buffer size.
      */
-    explicit EngineServer(const std::string& apiEndpointPath,
-                          std::shared_ptr<api::Registry> registry,
-                          const std::string& eventEndpointPath,
-                          std::optional<std::string> pathFloodedFile,
-                          const int bufferSize);
+    EngineServer(int threadPoolSize = 1);
+    ~EngineServer();
 
     /**
-     * @brief Start server.
+     * @brief Add an endpoint to the server.
      *
+     * @param name (const std::string&) The name of the endpoint.
+     * @param endpoint (std::shared_ptr<Endpoint>) The endpoint to add.
+     *
+     * @throw std::runtime_error If the endpoint name is already in use.
      */
-    void run(void);
+    void addEndpoint(const std::string& name, std::shared_ptr<Endpoint> endpoint);
 
     /**
-     * @brief Close and liberate resources used by server.
+     * @brief Start the server. This method will start the main loop in blocking mode. (same thread)
      *
      */
-    void close(void);
+    void start();
 
     /**
-     * @brief Get server output queue
-     *
-     * @return std::shared_ptr<concurrentQueue>
+     * @brief This method will send a request to stop the server. The server will stop after the current request is
+     * processed.
+     * @note This method is thread safe and can be called from any thread, this is the recommended way to stop the
+     * server.
      */
-    std::shared_ptr<moodycamel::BlockingConcurrentQueue<base::Event>>
-    getEventQueue() const;
+    void request_stop();
 
-    /**
-     * @brief Get the API Registry asociated with the server
-     *
-     * @return The shared pointer to the API Registry
-     */
-    std::shared_ptr<api::Registry> getRegistry() const;
 };
 
-} // namespace engineserver
+} // namespace server
 
-#endif // _ENGINE_SERVER_H
+#endif // _SERVER_SERVER_H

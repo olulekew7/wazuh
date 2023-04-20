@@ -1,105 +1,111 @@
-/* Copyright (C) 2015-2022, Wazuh Inc.
- * All rights reserved.
- *
- * This program is free software; you can redistribute it
- * and/or modify it under the terms of the GNU General Public
- * License (version 2) as published by the FSF - Free Software
- * Foundation.
- */
+#include <server/engineServer.hpp>
 
-#include "server/engineServer.hpp"
+#include <cstring>      // Unix  socket datagram bind
+#include <fcntl.h>      // Unix socket datagram bind
+#include <sys/socket.h> // Unix socket datagram bind
+#include <sys/un.h>     // Unix socket datagram bind
+#include <unistd.h>     // Unix socket datagram bind
 
-#include <map>
-#include <memory>
-#include <stdexcept>
-#include <string>
-#include <vector>
+#include <exception>
 
 #include <logging/logging.hpp>
 
-#include "endpoints/apiEndpoint.hpp"
-#include "endpoints/eventEndpoint.hpp"
+namespace
+{ /**
+   * @brief Change the size of the thread pool worker of libuv (UV_THREADPOOL_SIZE)
+   *
+   * @param newSize The new size of the thread pool worker
+   * @throw std::runtime_error If the new size is invalid or if the new size could not be set.
+   */
+void changeUVTreadPoolWorkerSize(int newSize)
+{
+    // Check if the new size is valid [MAX_THREADPOOL_SIZE == 1024]
+    if (newSize < 1 || newSize > 1024)
+    {
+        throw std::runtime_error("Invalid thread pool worker size.");
+    }
 
-using moodycamel::BlockingConcurrentQueue;
+    // Convertir el tamaño del grupo de hilos de trabajo a una cadena
+    std::string newSizeStr = std::to_string(newSize);
 
-using namespace engineserver::endpoints;
+    // Set the new size for the thread pool worker
+    if (setenv("UV_THREADPOOL_SIZE", newSizeStr.c_str(), true) != 0)
+    {
+        throw std::runtime_error("Could not set the new thread pool worker size.");
+    }
+
+    LOG_DEBUG("Thread pool worker size set to {}", newSize);
+}
+} // namespace
 
 namespace engineserver
 {
 
-EngineServer::EngineServer(const std::string& apiEndpointPath,
-                           std::shared_ptr<api::Registry> registry,
-                           const std::string& eventEndpointPath,
-                           std::optional<std::string> pathFloodedFile,
-                           const int bufferSize)
+EngineServer::EngineServer(int threadPoolSize)
 {
-    try
-    {
-        if (nullptr == registry)
+    // Change the size of the thread pool worker
+    changeUVTreadPoolWorkerSize(threadPoolSize);
+
+    m_loop = uvw::Loop::getDefault();
+    m_status = Status::STOPPED;
+
+    m_stopHandle = m_loop->resource<uvw::AsyncHandle>();
+    m_stopHandle->on<uvw::AsyncEvent>(
+        [this](const uvw::AsyncEvent&, uvw::AsyncHandle&)
         {
-            registry = std::make_shared<api::Registry>();
-        }
-        auto apiEndpoint = std::make_shared<APIEndpoint>(apiEndpointPath, registry);
-        apiEndpoint->configure();
-        m_endpoints.emplace(EndpointType::API, std::move(apiEndpoint));
+            this->stop();
+            this->m_status = Status::STOPPED;
+        });
 
-        auto eventQueue = std::make_shared<BlockingConcurrentQueue<base::Event>>(bufferSize);
-        auto eventEndpoint = std::make_shared<EventEndpoint>(eventEndpointPath, eventQueue, pathFloodedFile);
-        eventEndpoint->configure();
-        m_endpoints.emplace(EndpointType::EVENT, std::move(eventEndpoint));
-    }
-    catch (const std::exception& e)
-    {
-        WAZUH_LOG_ERROR(
-            "Engine server: An exception ocurred while building the server: {}",
-            e.what());
-        throw;
-    }
+    m_endpoints = std::unordered_map<std::string, std::shared_ptr<Endpoint>>();
+
+    m_loop->on<uvw::ErrorEvent>(
+        [](const uvw::ErrorEvent& e, uvw::Loop&)
+        {
+            LOG_ERROR("Error: {} - {}", e.name(), e.what());
+        });
 }
 
-void EngineServer::run(void)
+EngineServer::~EngineServer()
 {
-    if (m_endpoints.size() > 0)
-    {
-        WAZUH_LOG_INFO("Engine server: Starting...");
-        m_endpoints.begin()->second->run();
-    }
-    else
-    {
-        WAZUH_LOG_WARN("Engine server: The server cannot be started, there are no "
-                       "endpoints configured.");
-    }
-}
+    this->stop();
+};
 
-void EngineServer::close(void)
+void EngineServer::start()
 {
-    if (0 < m_endpoints.size())
-    {
-        m_endpoints.begin()->second->close(); // TODO: All or only the first one?
-    }
+    LOG_INFO("Starting the server...");
+    m_status = Status::RUNNING;
+    m_loop->run<uvw::Loop::Mode::DEFAULT>();
+    LOG_INFO("Server stopped");
 }
 
-std::shared_ptr<moodycamel::BlockingConcurrentQueue<base::Event>> EngineServer::getEventQueue() const
+void EngineServer::stop()
 {
-    if (m_endpoints.find(EndpointType::EVENT) != m_endpoints.end())
-    {
-        // cast and get queue
-        const auto& baseEndpoint = m_endpoints.at(EndpointType::EVENT);
-        return std::static_pointer_cast<EventEndpoint>(baseEndpoint)->getEventQueue();
-    }
-    return nullptr;
+    LOG_INFO("Stopping the server");
+    m_loop->walk([](auto& handle) { handle.close(); });
+    m_loop->stop();
+    // FIXME wait for workers to finish before closing the loop
+    // This throws segfault when closing the loop
+    this->m_loop->close();
+    LOG_INFO("Server closed");
 }
 
-std::shared_ptr<api::Registry> EngineServer::getRegistry() const
+void EngineServer::request_stop()
 {
-    if (m_endpoints.find(EndpointType::API) != m_endpoints.end())
-    {
-        // cast and get registry
-        const auto& baseEndpoint = m_endpoints.at(EndpointType::API);
-        const auto apiEndpoint = std::static_pointer_cast<APIEndpoint>(baseEndpoint);
-        return apiEndpoint->getRegistry();
-    }
-    return nullptr;
+    LOG_DEBUG("Requesting stop");
+    m_stopHandle->send();
 }
 
+void EngineServer::addEndpoint(const std::string& name, std::shared_ptr<Endpoint> endpoint)
+{
+    LOG_DEBUG("Adding endpoint {}", name);
+    // first check if the endpoint already exists
+    if (m_endpoints.find(name) != m_endpoints.end())
+    {
+        throw std::runtime_error(fmt::format("Endpoint {} already exists", name));
+    }
+    // add the endpoint
+    endpoint->bind(m_loop);
+    m_endpoints[name] = endpoint;
+}
 } // namespace engineserver

@@ -9,10 +9,8 @@
 
 const base::Name successName({"decoder", "name", "ok"});
 const base::Name failName {{"decoder", "name", "fail"}};
-const json::Json
-    successJson(fmt::format("{{\"name\": \"{}\"}}", successName.fullName()).c_str());
-const json::Json
-    successCollectionJson(fmt::format("[\"{}\"]", successName.fullName()).c_str());
+const json::Json successJson(fmt::format("{{\"name\": \"{}\"}}", successName.fullName()).c_str());
+const json::Json successCollectionJson(fmt::format("[\"{}\"]", successName.fullName()).c_str());
 const std::string successYml(fmt::format("name: {}", successName.fullName()).c_str());
 const std::string successCollectionYml(fmt::format("- {}", successName.fullName()));
 const json::Json validJson(R"({})");
@@ -40,13 +38,11 @@ const api::catalog::Resource failResourceAsset {
     api::catalog::Resource::Format::json};
 
 const api::catalog::Resource successCollectionAssetJson {
-    base::Name(
-        {api::catalog::Resource::typeToStr(api::catalog::Resource::Type::decoder)}),
+    base::Name({api::catalog::Resource::typeToStr(api::catalog::Resource::Type::decoder)}),
     api::catalog::Resource::Format::json};
 
 const api::catalog::Resource successCollectionAssetYml {
-    base::Name(
-        {api::catalog::Resource::typeToStr(api::catalog::Resource::Type::decoder)}),
+    base::Name({api::catalog::Resource::typeToStr(api::catalog::Resource::Type::decoder)}),
     api::catalog::Resource::Format::yaml};
 
 class FakeStore : public store::IStore
@@ -70,8 +66,7 @@ public:
         return base::Error {"error"};
     }
 
-    std::optional<base::Error> add(const base::Name& name,
-                                   const json::Json& content) override
+    std::optional<base::Error> add(const base::Name& name, const json::Json& content) override
     {
         if (name.parts()[2] == successName.parts()[2])
         {
@@ -99,8 +94,7 @@ public:
         return base::Error {"error"};
     }
 
-    std::optional<base::Error> update(const base::Name& name,
-                                      const json::Json& content) override
+    std::optional<base::Error> update(const base::Name& name, const json::Json& content) override
     {
         if (name.parts()[2] == successName.parts()[2])
         {
@@ -116,7 +110,17 @@ class FakeValidator : public builder::IValidator
 public:
     ~FakeValidator() = default;
 
-    std::optional<base::Error> validateEnvironment(const json::Json& json) const override
+    std::optional<base::Error> validatePolicy(const json::Json& json) const override
+    {
+        if (json.isObject())
+        {
+            return std::nullopt;
+        }
+
+        return base::Error {"error"};
+    }
+
+    std::optional<base::Error> validateIntegration(const json::Json& json) const override
     {
         if (json.isObject())
         {

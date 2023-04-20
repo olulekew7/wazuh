@@ -1,12 +1,3 @@
-/* Copyright (C) 2015-2022, Wazuh Inc.
- * All rights reserved.
- *
- * This program is free software; you can redistribute it
- * and/or modify it under the terms of the GNU General Public
- * License (version 2) as published by the FSF - Free Software
- * Foundation.
- */
-
 #include <vector>
 
 #include <gtest/gtest.h>
@@ -30,13 +21,13 @@ class opBuilderKVDBMatchTest : public ::testing::Test
 protected:
     kvdb_manager::KVDBManager& kvdbManager = kvdb_manager::KVDBManager::get();
 
-    virtual void SetUp()
+    void SetUp() override
     {
         auto varHandle = kvdbManager->getHandler("TEST_DB", true);
         ASSERT_FALSE(std::holds_alternative<base::Error>(varHandle));
     }
 
-    virtual void TearDown() { kvdbManager.unloadDB("TEST_DB"); }
+    void TearDown() override { kvdbManager.unloadDB("TEST_DB"); }
 };
 
 // Build ok

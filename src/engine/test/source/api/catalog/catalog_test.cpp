@@ -1,13 +1,23 @@
 #include "catalogTestShared.hpp"
 #include <gtest/gtest.h>
+#include <testsCommon.hpp>
 
-TEST(CatalogConfigurationTest, Validates)
+class CatalogTest : public ::testing::Test
+{
+
+protected:
+    void SetUp() override { initLogging(); }
+
+    void TearDown() override {}
+};
+
+TEST_F(CatalogTest, Validates)
 {
     auto config = getConfig();
     ASSERT_NO_THROW(config.validate());
 }
 
-TEST(CatalogConfigurationTest, ValidatesErrorNull)
+TEST_F(CatalogTest, ValidatesErrorNull)
 {
     api::catalog::Config config;
     config.store = std::make_shared<FakeStore>();
@@ -15,19 +25,19 @@ TEST(CatalogConfigurationTest, ValidatesErrorNull)
     ASSERT_THROW(config.validate(), std::runtime_error);
 }
 
-TEST(CatalogTest, Builds)
+TEST_F(CatalogTest, Builds)
 {
     auto config = getConfig();
     ASSERT_NO_THROW(api::catalog::Catalog catalog(config));
 }
 
-TEST(CatalogTest, BuildsInvalidConfig)
+TEST_F(CatalogTest, BuildsInvalidConfig)
 {
     api::catalog::Config config;
     ASSERT_THROW(api::catalog::Catalog catalog(config), std::runtime_error);
 }
 
-TEST(CatalogTest, GetResourceSpecificJson)
+TEST_F(CatalogTest, GetResourceSpecificJson)
 {
     auto config = getConfig();
     api::catalog::Catalog catalog(config);
@@ -37,7 +47,7 @@ TEST(CatalogTest, GetResourceSpecificJson)
     ASSERT_EQ(std::get<std::string>(result), successJson.str());
 }
 
-TEST(CatalogTest, GetResourceSpecificYml)
+TEST_F(CatalogTest, GetResourceSpecificYml)
 {
     auto config = getConfig();
     api::catalog::Catalog catalog(config);
@@ -47,7 +57,7 @@ TEST(CatalogTest, GetResourceSpecificYml)
     ASSERT_EQ(std::get<std::string>(result), successYml);
 }
 
-TEST(CatalogTest, GetResourceSpecificDriverError)
+TEST_F(CatalogTest, GetResourceSpecificDriverError)
 {
     auto config = getConfig();
     api::catalog::Catalog catalog(config);
@@ -56,7 +66,7 @@ TEST(CatalogTest, GetResourceSpecificDriverError)
     ASSERT_TRUE(std::holds_alternative<base::Error>(result));
 }
 
-TEST(CatalogTest, GetResourceCollectionJson)
+TEST_F(CatalogTest, GetResourceCollectionJson)
 {
     auto config = getConfig();
     api::catalog::Catalog catalog(config);
@@ -66,7 +76,7 @@ TEST(CatalogTest, GetResourceCollectionJson)
     ASSERT_EQ(std::get<std::string>(result), successCollectionJson.str());
 }
 
-TEST(CatalogTest, GetResourceCollectionYml)
+TEST_F(CatalogTest, GetResourceCollectionYml)
 {
     auto config = getConfig();
     api::catalog::Catalog catalog(config);
@@ -76,17 +86,16 @@ TEST(CatalogTest, GetResourceCollectionYml)
     ASSERT_EQ(std::get<std::string>(result), successCollectionYml);
 }
 
-TEST(CatalogTest, PostResourceCollectioJson)
+TEST_F(CatalogTest, PostResourceCollectioJson)
 {
     auto config = getConfig();
     api::catalog::Catalog catalog(config);
     std::optional<base::Error> error;
-    ASSERT_NO_THROW(
-        error = catalog.postResource(successCollectionAssetJson, successJson.str()));
+    ASSERT_NO_THROW(error = catalog.postResource(successCollectionAssetJson, successJson.str()));
     ASSERT_FALSE(error);
 }
 
-TEST(CatalogTest, PostResourceCollectioYml)
+TEST_F(CatalogTest, PostResourceCollectioYml)
 {
     auto config = getConfig();
     api::catalog::Catalog catalog(config);
@@ -95,7 +104,7 @@ TEST(CatalogTest, PostResourceCollectioYml)
     ASSERT_FALSE(error);
 }
 
-TEST(CatalogTest, PostResourceCollectioDriverError)
+TEST_F(CatalogTest, PostResourceCollectioDriverError)
 {
     auto config = getConfig();
     api::catalog::Catalog catalog(config);
@@ -104,17 +113,16 @@ TEST(CatalogTest, PostResourceCollectioDriverError)
     ASSERT_TRUE(error);
 }
 
-TEST(CatalogTest, PostResourceSpecific)
+TEST_F(CatalogTest, PostResourceSpecific)
 {
     auto config = getConfig();
     api::catalog::Catalog catalog(config);
     std::optional<base::Error> error;
-    ASSERT_NO_THROW(
-        error = catalog.postResource(successResourceAssetJson, successJson.str()));
+    ASSERT_NO_THROW(error = catalog.postResource(successResourceAssetJson, successJson.str()));
     ASSERT_TRUE(error);
 }
 
-TEST(CatalogTest, DeleteResourceSpecific)
+TEST_F(CatalogTest, DeleteResourceSpecific)
 {
     auto config = getConfig();
     api::catalog::Catalog catalog(config);
@@ -123,7 +131,7 @@ TEST(CatalogTest, DeleteResourceSpecific)
     ASSERT_FALSE(error);
 }
 
-TEST(CatalogTest, DeleteResourceSpecificDriverError)
+TEST_F(CatalogTest, DeleteResourceSpecificDriverError)
 {
     auto config = getConfig();
     api::catalog::Catalog catalog(config);
@@ -132,7 +140,7 @@ TEST(CatalogTest, DeleteResourceSpecificDriverError)
     ASSERT_TRUE(error);
 }
 
-TEST(CatalogTest, DeleteResourceCollection)
+TEST_F(CatalogTest, DeleteResourceCollection)
 {
     auto config = getConfig();
     api::catalog::Catalog catalog(config);
@@ -141,17 +149,16 @@ TEST(CatalogTest, DeleteResourceCollection)
     ASSERT_FALSE(error);
 }
 
-TEST(CatalogTest, PutResourceSpecificJson)
+TEST_F(CatalogTest, PutResourceSpecificJson)
 {
     auto config = getConfig();
     api::catalog::Catalog catalog(config);
     std::optional<base::Error> error;
-    ASSERT_NO_THROW(error =
-                        catalog.putResource(successResourceAssetJson, successJson.str()));
+    ASSERT_NO_THROW(error = catalog.putResource(successResourceAssetJson, successJson.str()));
     ASSERT_FALSE(error);
 }
 
-TEST(CatalogTest, PutResourceSpecificYml)
+TEST_F(CatalogTest, PutResourceSpecificYml)
 {
     auto config = getConfig();
     api::catalog::Catalog catalog(config);
@@ -160,7 +167,7 @@ TEST(CatalogTest, PutResourceSpecificYml)
     ASSERT_FALSE(error);
 }
 
-TEST(CatalogTest, PutResourceSpecificDriverError)
+TEST_F(CatalogTest, PutResourceSpecificDriverError)
 {
     auto config = getConfig();
     api::catalog::Catalog catalog(config);
@@ -169,37 +176,34 @@ TEST(CatalogTest, PutResourceSpecificDriverError)
     ASSERT_TRUE(error);
 }
 
-TEST(CatalogTest, PutResourceCollection)
+TEST_F(CatalogTest, PutResourceCollection)
 {
     auto config = getConfig();
     api::catalog::Catalog catalog(config);
     std::optional<base::Error> error;
-    ASSERT_NO_THROW(
-        error = catalog.putResource(successCollectionAssetJson, successJson.str()));
+    ASSERT_NO_THROW(error = catalog.putResource(successCollectionAssetJson, successJson.str()));
     ASSERT_TRUE(error);
 }
 
-TEST(CatalogTest, ValidateResourceSpecificJson)
+TEST_F(CatalogTest, ValidateResourceSpecificJson)
 {
     auto config = getConfig();
     api::catalog::Catalog catalog(config);
     std::optional<base::Error> error;
-    ASSERT_NO_THROW(
-        error = catalog.validateResource(successResourceAssetJson, successJson.str()));
+    ASSERT_NO_THROW(error = catalog.validateResource(successResourceAssetJson, successJson.str()));
     ASSERT_FALSE(error);
 }
 
-TEST(CatalogTest, ValidateResourceSpecificYml)
+TEST_F(CatalogTest, ValidateResourceSpecificYml)
 {
     auto config = getConfig();
     api::catalog::Catalog catalog(config);
     std::optional<base::Error> error;
-    ASSERT_NO_THROW(error =
-                        catalog.validateResource(successResourceAssetYml, successYml));
+    ASSERT_NO_THROW(error = catalog.validateResource(successResourceAssetYml, successYml));
     ASSERT_FALSE(error);
 }
 
-TEST(CatalogTest, ValidateResourceSpecificDriverError)
+TEST_F(CatalogTest, ValidateResourceSpecificDriverError)
 {
     auto config = getConfig();
     api::catalog::Catalog catalog(config);
@@ -208,12 +212,11 @@ TEST(CatalogTest, ValidateResourceSpecificDriverError)
     ASSERT_TRUE(error);
 }
 
-TEST(CatalogTest, ValidateResourceCollection)
+TEST_F(CatalogTest, ValidateResourceCollection)
 {
     auto config = getConfig();
     api::catalog::Catalog catalog(config);
     std::optional<base::Error> error;
-    ASSERT_NO_THROW(
-        error = catalog.validateResource(successCollectionAssetJson, successJson.str()));
+    ASSERT_NO_THROW(error = catalog.validateResource(successCollectionAssetJson, successJson.str()));
     ASSERT_TRUE(error);
 }
