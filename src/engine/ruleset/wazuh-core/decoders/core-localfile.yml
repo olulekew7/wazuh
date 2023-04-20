@@ -37,6 +37,13 @@ normalize:
       - event.module: $wazuh.origin
   # TODO Rest of wodles
 
+  # Azure
+  - check:
+      - wazuh.origin: +starts_with/Azure
+    map:
+      - wazuh.source: wodle
+      - event.module: $wazuh.origin
+
   ### Logcollector ###
   - check:
       - wazuh.source: +not_exists

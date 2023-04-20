@@ -2,7 +2,7 @@
 name: decoder/azure-decoder/0
 
 sources:
-  - decoder/json/0
+  - decoder/core-localfile/0
 
 metadata:
   description: Parent decoder for Azure events
@@ -17,8 +17,11 @@ metadata:
     - https://learn.microsoft.com/en-us/azure/azure-monitor/essentials/platform-logs-overview
 
 check:
-   - wazuh.origin: /dev/stdin
+   - event.module: Azure
 
+parse:
+  logpar:
+    - event.original: <~json/json>
 
 normalize:
   - map:
