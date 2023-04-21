@@ -1,0 +1,34 @@
+azure.activitylogs.properties:
+  array: true
+  type: keyword
+  description: Properties
+
+azure.activitylogs.operation_name:
+  type: keyword
+  description: >
+    Operation name
+
+azure.activitylogs.operation_version:
+  type: keyword
+  description: >
+    Operation version
+
+azure.activitylogs.tenant_id:
+  type: keyword
+  description: >
+    Tenant ID
+
+azure.activitylogs.level:
+  type: long
+  description: >
+    Level
+
+azure.activitylogs.result_signature:
+  type: keyword
+  description: >
+    Result signature
+
+azure.activitylogs.event_category:
+  type: keyword
+  description: >
+    Event Category

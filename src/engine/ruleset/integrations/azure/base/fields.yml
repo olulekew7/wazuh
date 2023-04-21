@@ -1,0 +1,23 @@
+azure.resource.id:
+  type: keyword
+  description: The identifier of the resource that the user signed in to.
+
+azure.subscription_id:
+  type: keyword
+  description: >
+    Azure subscription ID
+
+azure.resource.group:
+  type: keyword
+  description: >
+    Resource group
+
+azure.resource.provider:
+  type: keyword
+  description: >
+    Resource type/namespace
+
+azure.tenant_id:
+  type: keyword
+  description: >
+    Tenant ID

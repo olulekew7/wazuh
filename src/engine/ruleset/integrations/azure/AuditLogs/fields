@@ -1,0 +1,60 @@
+azure.auditlogs.operation_name:
+  type: keyword
+  description: >
+    Operation name
+
+azure.auditlogs.result_signature:
+  type: keyword
+  description: >
+    Result signature
+
+azure.auditlogs.operation_version:
+  type: keyword
+  description: >
+    The operation version
+
+azure.correlation_id:
+  type: keyword
+  description: >
+    Correlation ID
+
+azure.auditlogs.properties.operation_type:
+  type: keyword
+  description: >
+    Operation type
+
+azure.auditlogs.properties.activity_display_name:
+  type: keyword
+  description: >
+    Activity display name
+
+azure.auditlogs.properties.activity_datetime:
+  type: keyword
+  description: >
+    Activity timestamp
+
+azure.auditlogs.properties.additional_details:
+  type: keyword
+  description: >
+    Additional details
+
+azure.auditlogs.properties.result_reason:
+  type: keyword
+  description: >
+    Reason for the log result
+
+azure.auditlogs.properties.correlation_id:
+  type: keyword
+  description: >
+    Correlation ID
+
+azure.auditlogs.properties.logged_by_service:
+  type: keyword
+  description: >
+    Logged by service
+
+azure.auditlogs.properties.initiated_by:
+  type: keyword
+  description: >
+    Information regarding the initiator
+  array: true
