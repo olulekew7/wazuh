@@ -43,6 +43,7 @@ file(GLOB UTIL_CXX_UNITTEST_COMMON_SRC
     "threadDispatcher_test.cpp"
     "threadSafeQueue_test.cpp"
     "timeHelper_test.cpp"
+    "loggerHelper_test.cpp"
     "main.cpp"
 )
 
