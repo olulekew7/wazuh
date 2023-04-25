@@ -1,0 +1,28 @@
+title: Azure Integration - AuditLogs
+overview: This integration processes events logs from Azure
+compatibility: AuditLogs decoder for Azure integration
+configuration: > 
+  This integration works using Wazuh Log Analytics with Azure.
+  Use this wodle to collect Azure Log Analitycs logs
+
+  ```html
+  <wodle name="azure-logs">
+    <disabled>no</disabled>
+    <run_on_start>yes</run_on_start>
+  <log_analytics>
+        <auth_path>[credentials path]</auth_path>
+        <tenantdomain>[tenant]</tenantdomain>
+  <request>
+            <query>AuditLogs</query>
+            <workspace>[workspace id]</workspace>
+            <time_offset>7d</time_offset>
+        </request>
+    </log_analytics>
+  </wodle>
+  ```
+
+  For more details on configuring Wazuh with Azure Log Analytics check https://documentation.wazuh.com/current/azure/activity-services/services/log-analytics.html
+
+event:
+  module: azure-auditlogs
+  dataset: "-"
