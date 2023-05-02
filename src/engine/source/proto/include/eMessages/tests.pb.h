@@ -51,20 +51,20 @@ namespace wazuh {
 namespace api {
 namespace engine {
 namespace test {
-class test_Request;
-struct test_RequestDefaultTypeInternal;
-extern test_RequestDefaultTypeInternal _test_Request_default_instance_;
-class test_Response;
-struct test_ResponseDefaultTypeInternal;
-extern test_ResponseDefaultTypeInternal _test_Response_default_instance_;
+class Run_Request;
+struct Run_RequestDefaultTypeInternal;
+extern Run_RequestDefaultTypeInternal _Run_Request_default_instance_;
+class Run_Response;
+struct Run_ResponseDefaultTypeInternal;
+extern Run_ResponseDefaultTypeInternal _Run_Response_default_instance_;
 }  // namespace test
 }  // namespace engine
 }  // namespace api
 }  // namespace wazuh
 }  // namespace com
 PROTOBUF_NAMESPACE_OPEN
-template<> ::com::wazuh::api::engine::test::test_Request* Arena::CreateMaybeMessage<::com::wazuh::api::engine::test::test_Request>(Arena*);
-template<> ::com::wazuh::api::engine::test::test_Response* Arena::CreateMaybeMessage<::com::wazuh::api::engine::test::test_Response>(Arena*);
+template<> ::com::wazuh::api::engine::test::Run_Request* Arena::CreateMaybeMessage<::com::wazuh::api::engine::test::Run_Request>(Arena*);
+template<> ::com::wazuh::api::engine::test::Run_Response* Arena::CreateMaybeMessage<::com::wazuh::api::engine::test::Run_Response>(Arena*);
 PROTOBUF_NAMESPACE_CLOSE
 namespace com {
 namespace wazuh {
@@ -74,24 +74,24 @@ namespace test {
 
 // ===================================================================
 
-class test_Request final :
-    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:com.wazuh.api.engine.test.test_Request) */ {
+class Run_Request final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:com.wazuh.api.engine.test.Run_Request) */ {
  public:
-  inline test_Request() : test_Request(nullptr) {}
-  ~test_Request() override;
-  explicit PROTOBUF_CONSTEXPR test_Request(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+  inline Run_Request() : Run_Request(nullptr) {}
+  ~Run_Request() override;
+  explicit PROTOBUF_CONSTEXPR Run_Request(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
 
-  test_Request(const test_Request& from);
-  test_Request(test_Request&& from) noexcept
-    : test_Request() {
+  Run_Request(const Run_Request& from);
+  Run_Request(Run_Request&& from) noexcept
+    : Run_Request() {
     *this = ::std::move(from);
   }
 
-  inline test_Request& operator=(const test_Request& from) {
+  inline Run_Request& operator=(const Run_Request& from) {
     CopyFrom(from);
     return *this;
   }
-  inline test_Request& operator=(test_Request&& from) noexcept {
+  inline Run_Request& operator=(Run_Request&& from) noexcept {
     if (this == &from) return *this;
     if (GetOwningArena() == from.GetOwningArena()
   #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
@@ -114,20 +114,20 @@ class test_Request final :
   static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
     return default_instance().GetMetadata().reflection;
   }
-  static const test_Request& default_instance() {
+  static const Run_Request& default_instance() {
     return *internal_default_instance();
   }
-  static inline const test_Request* internal_default_instance() {
-    return reinterpret_cast<const test_Request*>(
-               &_test_Request_default_instance_);
+  static inline const Run_Request* internal_default_instance() {
+    return reinterpret_cast<const Run_Request*>(
+               &_Run_Request_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
     0;
 
-  friend void swap(test_Request& a, test_Request& b) {
+  friend void swap(Run_Request& a, Run_Request& b) {
     a.Swap(&b);
   }
-  inline void Swap(test_Request* other) {
+  inline void Swap(Run_Request* other) {
     if (other == this) return;
   #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
     if (GetOwningArena() != nullptr &&
@@ -140,7 +140,7 @@ class test_Request final :
       ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
     }
   }
-  void UnsafeArenaSwap(test_Request* other) {
+  void UnsafeArenaSwap(Run_Request* other) {
     if (other == this) return;
     GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
     InternalSwap(other);
@@ -148,14 +148,14 @@ class test_Request final :
 
   // implements Message ----------------------------------------------
 
-  test_Request* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
-    return CreateMaybeMessage<test_Request>(arena);
+  Run_Request* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<Run_Request>(arena);
   }
   using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
-  void CopyFrom(const test_Request& from);
+  void CopyFrom(const Run_Request& from);
   using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
-  void MergeFrom( const test_Request& from) {
-    test_Request::MergeImpl(*this, from);
+  void MergeFrom( const Run_Request& from) {
+    Run_Request::MergeImpl(*this, from);
   }
   private:
   static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
@@ -173,15 +173,15 @@ class test_Request final :
   void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
   void SharedDtor();
   void SetCachedSize(int size) const final;
-  void InternalSwap(test_Request* other);
+  void InternalSwap(Run_Request* other);
 
   private:
   friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
   static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
-    return "com.wazuh.api.engine.test.test_Request";
+    return "com.wazuh.api.engine.test.Run_Request";
   }
   protected:
-  explicit test_Request(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+  explicit Run_Request(::PROTOBUF_NAMESPACE_ID::Arena* arena,
                        bool is_message_owned = false);
   public:
 
@@ -195,81 +195,161 @@ class test_Request final :
   // accessors -------------------------------------------------------
 
   enum : int {
-    kDefaultStrFieldNumber = 1,
-    kValueStringFieldNumber = 4,
-    kAnyJSONFieldNumber = 5,
-    kDefaultIntFieldNumber = 2,
-    kDefaultBoolFieldNumber = 3,
+    kAssetTraceFieldNumber = 6,
+    kKvdbPathFieldNumber = 1,
+    kFileStorageFieldNumber = 2,
+    kPolicyFieldNumber = 3,
+    kLogLevelFieldNumber = 4,
+    kProtocolQueueFieldNumber = 7,
+    kProtocolLocationFieldNumber = 8,
+    kDebugLevelFieldNumber = 5,
   };
-  // string defaultStr = 1;
-  void clear_defaultstr();
-  const std::string& defaultstr() const;
+  // repeated string assetTrace = 6;
+  int assettrace_size() const;
+  private:
+  int _internal_assettrace_size() const;
+  public:
+  void clear_assettrace();
+  const std::string& assettrace(int index) const;
+  std::string* mutable_assettrace(int index);
+  void set_assettrace(int index, const std::string& value);
+  void set_assettrace(int index, std::string&& value);
+  void set_assettrace(int index, const char* value);
+  void set_assettrace(int index, const char* value, size_t size);
+  std::string* add_assettrace();
+  void add_assettrace(const std::string& value);
+  void add_assettrace(std::string&& value);
+  void add_assettrace(const char* value);
+  void add_assettrace(const char* value, size_t size);
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<std::string>& assettrace() const;
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<std::string>* mutable_assettrace();
+  private:
+  const std::string& _internal_assettrace(int index) const;
+  std::string* _internal_add_assettrace();
+  public:
+
+  // optional string kvdbPath = 1;
+  bool has_kvdbpath() const;
+  private:
+  bool _internal_has_kvdbpath() const;
+  public:
+  void clear_kvdbpath();
+  const std::string& kvdbpath() const;
   template <typename ArgT0 = const std::string&, typename... ArgT>
-  void set_defaultstr(ArgT0&& arg0, ArgT... args);
-  std::string* mutable_defaultstr();
-  PROTOBUF_NODISCARD std::string* release_defaultstr();
-  void set_allocated_defaultstr(std::string* defaultstr);
+  void set_kvdbpath(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_kvdbpath();
+  PROTOBUF_NODISCARD std::string* release_kvdbpath();
+  void set_allocated_kvdbpath(std::string* kvdbpath);
   private:
-  const std::string& _internal_defaultstr() const;
-  inline PROTOBUF_ALWAYS_INLINE void _internal_set_defaultstr(const std::string& value);
-  std::string* _internal_mutable_defaultstr();
+  const std::string& _internal_kvdbpath() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_kvdbpath(const std::string& value);
+  std::string* _internal_mutable_kvdbpath();
   public:
 
-  // optional string valueString = 4;
-  bool has_valuestring() const;
+  // optional string fileStorage = 2;
+  bool has_filestorage() const;
   private:
-  bool _internal_has_valuestring() const;
+  bool _internal_has_filestorage() const;
   public:
-  void clear_valuestring();
-  const std::string& valuestring() const;
+  void clear_filestorage();
+  const std::string& filestorage() const;
   template <typename ArgT0 = const std::string&, typename... ArgT>
-  void set_valuestring(ArgT0&& arg0, ArgT... args);
-  std::string* mutable_valuestring();
-  PROTOBUF_NODISCARD std::string* release_valuestring();
-  void set_allocated_valuestring(std::string* valuestring);
+  void set_filestorage(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_filestorage();
+  PROTOBUF_NODISCARD std::string* release_filestorage();
+  void set_allocated_filestorage(std::string* filestorage);
   private:
-  const std::string& _internal_valuestring() const;
-  inline PROTOBUF_ALWAYS_INLINE void _internal_set_valuestring(const std::string& value);
-  std::string* _internal_mutable_valuestring();
+  const std::string& _internal_filestorage() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_filestorage(const std::string& value);
+  std::string* _internal_mutable_filestorage();
   public:
 
-  // optional .google.protobuf.Value anyJSON = 5;
-  bool has_anyjson() const;
+  // optional string policy = 3;
+  bool has_policy() const;
   private:
-  bool _internal_has_anyjson() const;
+  bool _internal_has_policy() const;
   public:
-  void clear_anyjson();
-  const ::PROTOBUF_NAMESPACE_ID::Value& anyjson() const;
-  PROTOBUF_NODISCARD ::PROTOBUF_NAMESPACE_ID::Value* release_anyjson();
-  ::PROTOBUF_NAMESPACE_ID::Value* mutable_anyjson();
-  void set_allocated_anyjson(::PROTOBUF_NAMESPACE_ID::Value* anyjson);
+  void clear_policy();
+  const std::string& policy() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_policy(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_policy();
+  PROTOBUF_NODISCARD std::string* release_policy();
+  void set_allocated_policy(std::string* policy);
   private:
-  const ::PROTOBUF_NAMESPACE_ID::Value& _internal_anyjson() const;
-  ::PROTOBUF_NAMESPACE_ID::Value* _internal_mutable_anyjson();
-  public:
-  void unsafe_arena_set_allocated_anyjson(
-      ::PROTOBUF_NAMESPACE_ID::Value* anyjson);
-  ::PROTOBUF_NAMESPACE_ID::Value* unsafe_arena_release_anyjson();
-
-  // int32 defaultInt = 2;
-  void clear_defaultint();
-  int32_t defaultint() const;
-  void set_defaultint(int32_t value);
-  private:
-  int32_t _internal_defaultint() const;
-  void _internal_set_defaultint(int32_t value);
+  const std::string& _internal_policy() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_policy(const std::string& value);
+  std::string* _internal_mutable_policy();
   public:
 
-  // bool defaultBool = 3;
-  void clear_defaultbool();
-  bool defaultbool() const;
-  void set_defaultbool(bool value);
+  // optional string logLevel = 4;
+  bool has_loglevel() const;
   private:
-  bool _internal_defaultbool() const;
-  void _internal_set_defaultbool(bool value);
+  bool _internal_has_loglevel() const;
+  public:
+  void clear_loglevel();
+  const std::string& loglevel() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_loglevel(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_loglevel();
+  PROTOBUF_NODISCARD std::string* release_loglevel();
+  void set_allocated_loglevel(std::string* loglevel);
+  private:
+  const std::string& _internal_loglevel() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_loglevel(const std::string& value);
+  std::string* _internal_mutable_loglevel();
   public:
 
-  // @@protoc_insertion_point(class_scope:com.wazuh.api.engine.test.test_Request)
+  // optional bytes protocolQueue = 7;
+  bool has_protocolqueue() const;
+  private:
+  bool _internal_has_protocolqueue() const;
+  public:
+  void clear_protocolqueue();
+  const std::string& protocolqueue() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_protocolqueue(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_protocolqueue();
+  PROTOBUF_NODISCARD std::string* release_protocolqueue();
+  void set_allocated_protocolqueue(std::string* protocolqueue);
+  private:
+  const std::string& _internal_protocolqueue() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_protocolqueue(const std::string& value);
+  std::string* _internal_mutable_protocolqueue();
+  public:
+
+  // optional string protocolLocation = 8;
+  bool has_protocollocation() const;
+  private:
+  bool _internal_has_protocollocation() const;
+  public:
+  void clear_protocollocation();
+  const std::string& protocollocation() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_protocollocation(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_protocollocation();
+  PROTOBUF_NODISCARD std::string* release_protocollocation();
+  void set_allocated_protocollocation(std::string* protocollocation);
+  private:
+  const std::string& _internal_protocollocation() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_protocollocation(const std::string& value);
+  std::string* _internal_mutable_protocollocation();
+  public:
+
+  // optional int32 debugLevel = 5;
+  bool has_debuglevel() const;
+  private:
+  bool _internal_has_debuglevel() const;
+  public:
+  void clear_debuglevel();
+  int32_t debuglevel() const;
+  void set_debuglevel(int32_t value);
+  private:
+  int32_t _internal_debuglevel() const;
+  void _internal_set_debuglevel(int32_t value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:com.wazuh.api.engine.test.Run_Request)
  private:
   class _Internal;
 
@@ -279,35 +359,38 @@ class test_Request final :
   struct Impl_ {
     ::PROTOBUF_NAMESPACE_ID::internal::HasBits<1> _has_bits_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
-    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr defaultstr_;
-    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr valuestring_;
-    ::PROTOBUF_NAMESPACE_ID::Value* anyjson_;
-    int32_t defaultint_;
-    bool defaultbool_;
+    ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<std::string> assettrace_;
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr kvdbpath_;
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr filestorage_;
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr policy_;
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr loglevel_;
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr protocolqueue_;
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr protocollocation_;
+    int32_t debuglevel_;
   };
   union { Impl_ _impl_; };
   friend struct ::TableStruct_tests_2eproto;
 };
 // -------------------------------------------------------------------
 
-class test_Response final :
-    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:com.wazuh.api.engine.test.test_Response) */ {
+class Run_Response final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:com.wazuh.api.engine.test.Run_Response) */ {
  public:
-  inline test_Response() : test_Response(nullptr) {}
-  ~test_Response() override;
-  explicit PROTOBUF_CONSTEXPR test_Response(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+  inline Run_Response() : Run_Response(nullptr) {}
+  ~Run_Response() override;
+  explicit PROTOBUF_CONSTEXPR Run_Response(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
 
-  test_Response(const test_Response& from);
-  test_Response(test_Response&& from) noexcept
-    : test_Response() {
+  Run_Response(const Run_Response& from);
+  Run_Response(Run_Response&& from) noexcept
+    : Run_Response() {
     *this = ::std::move(from);
   }
 
-  inline test_Response& operator=(const test_Response& from) {
+  inline Run_Response& operator=(const Run_Response& from) {
     CopyFrom(from);
     return *this;
   }
-  inline test_Response& operator=(test_Response&& from) noexcept {
+  inline Run_Response& operator=(Run_Response&& from) noexcept {
     if (this == &from) return *this;
     if (GetOwningArena() == from.GetOwningArena()
   #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
@@ -330,20 +413,20 @@ class test_Response final :
   static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
     return default_instance().GetMetadata().reflection;
   }
-  static const test_Response& default_instance() {
+  static const Run_Response& default_instance() {
     return *internal_default_instance();
   }
-  static inline const test_Response* internal_default_instance() {
-    return reinterpret_cast<const test_Response*>(
-               &_test_Response_default_instance_);
+  static inline const Run_Response* internal_default_instance() {
+    return reinterpret_cast<const Run_Response*>(
+               &_Run_Response_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
     1;
 
-  friend void swap(test_Response& a, test_Response& b) {
+  friend void swap(Run_Response& a, Run_Response& b) {
     a.Swap(&b);
   }
-  inline void Swap(test_Response* other) {
+  inline void Swap(Run_Response* other) {
     if (other == this) return;
   #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
     if (GetOwningArena() != nullptr &&
@@ -356,7 +439,7 @@ class test_Response final :
       ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
     }
   }
-  void UnsafeArenaSwap(test_Response* other) {
+  void UnsafeArenaSwap(Run_Response* other) {
     if (other == this) return;
     GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
     InternalSwap(other);
@@ -364,14 +447,14 @@ class test_Response final :
 
   // implements Message ----------------------------------------------
 
-  test_Response* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
-    return CreateMaybeMessage<test_Response>(arena);
+  Run_Response* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<Run_Response>(arena);
   }
   using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
-  void CopyFrom(const test_Response& from);
+  void CopyFrom(const Run_Response& from);
   using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
-  void MergeFrom( const test_Response& from) {
-    test_Response::MergeImpl(*this, from);
+  void MergeFrom( const Run_Response& from) {
+    Run_Response::MergeImpl(*this, from);
   }
   private:
   static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
@@ -389,15 +472,15 @@ class test_Response final :
   void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
   void SharedDtor();
   void SetCachedSize(int size) const final;
-  void InternalSwap(test_Response* other);
+  void InternalSwap(Run_Response* other);
 
   private:
   friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
   static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
-    return "com.wazuh.api.engine.test.test_Response";
+    return "com.wazuh.api.engine.test.Run_Response";
   }
   protected:
-  explicit test_Response(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+  explicit Run_Response(::PROTOBUF_NAMESPACE_ID::Arena* arena,
                        bool is_message_owned = false);
   public:
 
@@ -412,8 +495,7 @@ class test_Response final :
 
   enum : int {
     kErrorFieldNumber = 2,
-    kValueStringFieldNumber = 4,
-    kValueObjFieldNumber = 3,
+    kValueFieldNumber = 3,
     kStatusFieldNumber = 1,
   };
   // optional string error = 2;
@@ -434,41 +516,23 @@ class test_Response final :
   std::string* _internal_mutable_error();
   public:
 
-  // optional string valueString = 4;
-  bool has_valuestring() const;
+  // optional .google.protobuf.Value value = 3;
+  bool has_value() const;
   private:
-  bool _internal_has_valuestring() const;
+  bool _internal_has_value() const;
   public:
-  void clear_valuestring();
-  const std::string& valuestring() const;
-  template <typename ArgT0 = const std::string&, typename... ArgT>
-  void set_valuestring(ArgT0&& arg0, ArgT... args);
-  std::string* mutable_valuestring();
-  PROTOBUF_NODISCARD std::string* release_valuestring();
-  void set_allocated_valuestring(std::string* valuestring);
+  void clear_value();
+  const ::PROTOBUF_NAMESPACE_ID::Value& value() const;
+  PROTOBUF_NODISCARD ::PROTOBUF_NAMESPACE_ID::Value* release_value();
+  ::PROTOBUF_NAMESPACE_ID::Value* mutable_value();
+  void set_allocated_value(::PROTOBUF_NAMESPACE_ID::Value* value);
   private:
-  const std::string& _internal_valuestring() const;
-  inline PROTOBUF_ALWAYS_INLINE void _internal_set_valuestring(const std::string& value);
-  std::string* _internal_mutable_valuestring();
+  const ::PROTOBUF_NAMESPACE_ID::Value& _internal_value() const;
+  ::PROTOBUF_NAMESPACE_ID::Value* _internal_mutable_value();
   public:
-
-  // optional .google.protobuf.Value valueObj = 3;
-  bool has_valueobj() const;
-  private:
-  bool _internal_has_valueobj() const;
-  public:
-  void clear_valueobj();
-  const ::PROTOBUF_NAMESPACE_ID::Value& valueobj() const;
-  PROTOBUF_NODISCARD ::PROTOBUF_NAMESPACE_ID::Value* release_valueobj();
-  ::PROTOBUF_NAMESPACE_ID::Value* mutable_valueobj();
-  void set_allocated_valueobj(::PROTOBUF_NAMESPACE_ID::Value* valueobj);
-  private:
-  const ::PROTOBUF_NAMESPACE_ID::Value& _internal_valueobj() const;
-  ::PROTOBUF_NAMESPACE_ID::Value* _internal_mutable_valueobj();
-  public:
-  void unsafe_arena_set_allocated_valueobj(
-      ::PROTOBUF_NAMESPACE_ID::Value* valueobj);
-  ::PROTOBUF_NAMESPACE_ID::Value* unsafe_arena_release_valueobj();
+  void unsafe_arena_set_allocated_value(
+      ::PROTOBUF_NAMESPACE_ID::Value* value);
+  ::PROTOBUF_NAMESPACE_ID::Value* unsafe_arena_release_value();
 
   // .com.wazuh.api.engine.ReturnStatus status = 1;
   void clear_status();
@@ -479,7 +543,7 @@ class test_Response final :
   void _internal_set_status(::com::wazuh::api::engine::ReturnStatus value);
   public:
 
-  // @@protoc_insertion_point(class_scope:com.wazuh.api.engine.test.test_Response)
+  // @@protoc_insertion_point(class_scope:com.wazuh.api.engine.test.Run_Response)
  private:
   class _Internal;
 
@@ -490,8 +554,7 @@ class test_Response final :
     ::PROTOBUF_NAMESPACE_ID::internal::HasBits<1> _has_bits_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
     ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr error_;
-    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr valuestring_;
-    ::PROTOBUF_NAMESPACE_ID::Value* valueobj_;
+    ::PROTOBUF_NAMESPACE_ID::Value* value_;
     int status_;
   };
   union { Impl_ _impl_; };
@@ -506,318 +569,584 @@ class test_Response final :
   #pragma GCC diagnostic push
   #pragma GCC diagnostic ignored "-Wstrict-aliasing"
 #endif  // __GNUC__
-// test_Request
+// Run_Request
 
-// string defaultStr = 1;
-inline void test_Request::clear_defaultstr() {
-  _impl_.defaultstr_.ClearToEmpty();
-}
-inline const std::string& test_Request::defaultstr() const {
-  // @@protoc_insertion_point(field_get:com.wazuh.api.engine.test.test_Request.defaultStr)
-  return _internal_defaultstr();
-}
-template <typename ArgT0, typename... ArgT>
-inline PROTOBUF_ALWAYS_INLINE
-void test_Request::set_defaultstr(ArgT0&& arg0, ArgT... args) {
- 
- _impl_.defaultstr_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
-  // @@protoc_insertion_point(field_set:com.wazuh.api.engine.test.test_Request.defaultStr)
-}
-inline std::string* test_Request::mutable_defaultstr() {
-  std::string* _s = _internal_mutable_defaultstr();
-  // @@protoc_insertion_point(field_mutable:com.wazuh.api.engine.test.test_Request.defaultStr)
-  return _s;
-}
-inline const std::string& test_Request::_internal_defaultstr() const {
-  return _impl_.defaultstr_.Get();
-}
-inline void test_Request::_internal_set_defaultstr(const std::string& value) {
-  
-  _impl_.defaultstr_.Set(value, GetArenaForAllocation());
-}
-inline std::string* test_Request::_internal_mutable_defaultstr() {
-  
-  return _impl_.defaultstr_.Mutable(GetArenaForAllocation());
-}
-inline std::string* test_Request::release_defaultstr() {
-  // @@protoc_insertion_point(field_release:com.wazuh.api.engine.test.test_Request.defaultStr)
-  return _impl_.defaultstr_.Release();
-}
-inline void test_Request::set_allocated_defaultstr(std::string* defaultstr) {
-  if (defaultstr != nullptr) {
-    
-  } else {
-    
-  }
-  _impl_.defaultstr_.SetAllocated(defaultstr, GetArenaForAllocation());
-#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
-  if (_impl_.defaultstr_.IsDefault()) {
-    _impl_.defaultstr_.Set("", GetArenaForAllocation());
-  }
-#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
-  // @@protoc_insertion_point(field_set_allocated:com.wazuh.api.engine.test.test_Request.defaultStr)
-}
-
-// int32 defaultInt = 2;
-inline void test_Request::clear_defaultint() {
-  _impl_.defaultint_ = 0;
-}
-inline int32_t test_Request::_internal_defaultint() const {
-  return _impl_.defaultint_;
-}
-inline int32_t test_Request::defaultint() const {
-  // @@protoc_insertion_point(field_get:com.wazuh.api.engine.test.test_Request.defaultInt)
-  return _internal_defaultint();
-}
-inline void test_Request::_internal_set_defaultint(int32_t value) {
-  
-  _impl_.defaultint_ = value;
-}
-inline void test_Request::set_defaultint(int32_t value) {
-  _internal_set_defaultint(value);
-  // @@protoc_insertion_point(field_set:com.wazuh.api.engine.test.test_Request.defaultInt)
-}
-
-// bool defaultBool = 3;
-inline void test_Request::clear_defaultbool() {
-  _impl_.defaultbool_ = false;
-}
-inline bool test_Request::_internal_defaultbool() const {
-  return _impl_.defaultbool_;
-}
-inline bool test_Request::defaultbool() const {
-  // @@protoc_insertion_point(field_get:com.wazuh.api.engine.test.test_Request.defaultBool)
-  return _internal_defaultbool();
-}
-inline void test_Request::_internal_set_defaultbool(bool value) {
-  
-  _impl_.defaultbool_ = value;
-}
-inline void test_Request::set_defaultbool(bool value) {
-  _internal_set_defaultbool(value);
-  // @@protoc_insertion_point(field_set:com.wazuh.api.engine.test.test_Request.defaultBool)
-}
-
-// optional string valueString = 4;
-inline bool test_Request::_internal_has_valuestring() const {
+// optional string kvdbPath = 1;
+inline bool Run_Request::_internal_has_kvdbpath() const {
   bool value = (_impl_._has_bits_[0] & 0x00000001u) != 0;
   return value;
 }
-inline bool test_Request::has_valuestring() const {
-  return _internal_has_valuestring();
+inline bool Run_Request::has_kvdbpath() const {
+  return _internal_has_kvdbpath();
 }
-inline void test_Request::clear_valuestring() {
-  _impl_.valuestring_.ClearToEmpty();
+inline void Run_Request::clear_kvdbpath() {
+  _impl_.kvdbpath_.ClearToEmpty();
   _impl_._has_bits_[0] &= ~0x00000001u;
 }
-inline const std::string& test_Request::valuestring() const {
-  // @@protoc_insertion_point(field_get:com.wazuh.api.engine.test.test_Request.valueString)
-  return _internal_valuestring();
+inline const std::string& Run_Request::kvdbpath() const {
+  // @@protoc_insertion_point(field_get:com.wazuh.api.engine.test.Run_Request.kvdbPath)
+  return _internal_kvdbpath();
 }
 template <typename ArgT0, typename... ArgT>
 inline PROTOBUF_ALWAYS_INLINE
-void test_Request::set_valuestring(ArgT0&& arg0, ArgT... args) {
+void Run_Request::set_kvdbpath(ArgT0&& arg0, ArgT... args) {
  _impl_._has_bits_[0] |= 0x00000001u;
- _impl_.valuestring_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
-  // @@protoc_insertion_point(field_set:com.wazuh.api.engine.test.test_Request.valueString)
+ _impl_.kvdbpath_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:com.wazuh.api.engine.test.Run_Request.kvdbPath)
 }
-inline std::string* test_Request::mutable_valuestring() {
-  std::string* _s = _internal_mutable_valuestring();
-  // @@protoc_insertion_point(field_mutable:com.wazuh.api.engine.test.test_Request.valueString)
+inline std::string* Run_Request::mutable_kvdbpath() {
+  std::string* _s = _internal_mutable_kvdbpath();
+  // @@protoc_insertion_point(field_mutable:com.wazuh.api.engine.test.Run_Request.kvdbPath)
   return _s;
 }
-inline const std::string& test_Request::_internal_valuestring() const {
-  return _impl_.valuestring_.Get();
+inline const std::string& Run_Request::_internal_kvdbpath() const {
+  return _impl_.kvdbpath_.Get();
 }
-inline void test_Request::_internal_set_valuestring(const std::string& value) {
+inline void Run_Request::_internal_set_kvdbpath(const std::string& value) {
   _impl_._has_bits_[0] |= 0x00000001u;
-  _impl_.valuestring_.Set(value, GetArenaForAllocation());
+  _impl_.kvdbpath_.Set(value, GetArenaForAllocation());
 }
-inline std::string* test_Request::_internal_mutable_valuestring() {
+inline std::string* Run_Request::_internal_mutable_kvdbpath() {
   _impl_._has_bits_[0] |= 0x00000001u;
-  return _impl_.valuestring_.Mutable(GetArenaForAllocation());
+  return _impl_.kvdbpath_.Mutable(GetArenaForAllocation());
 }
-inline std::string* test_Request::release_valuestring() {
-  // @@protoc_insertion_point(field_release:com.wazuh.api.engine.test.test_Request.valueString)
-  if (!_internal_has_valuestring()) {
+inline std::string* Run_Request::release_kvdbpath() {
+  // @@protoc_insertion_point(field_release:com.wazuh.api.engine.test.Run_Request.kvdbPath)
+  if (!_internal_has_kvdbpath()) {
     return nullptr;
   }
   _impl_._has_bits_[0] &= ~0x00000001u;
-  auto* p = _impl_.valuestring_.Release();
+  auto* p = _impl_.kvdbpath_.Release();
 #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
-  if (_impl_.valuestring_.IsDefault()) {
-    _impl_.valuestring_.Set("", GetArenaForAllocation());
+  if (_impl_.kvdbpath_.IsDefault()) {
+    _impl_.kvdbpath_.Set("", GetArenaForAllocation());
   }
 #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
   return p;
 }
-inline void test_Request::set_allocated_valuestring(std::string* valuestring) {
-  if (valuestring != nullptr) {
+inline void Run_Request::set_allocated_kvdbpath(std::string* kvdbpath) {
+  if (kvdbpath != nullptr) {
     _impl_._has_bits_[0] |= 0x00000001u;
   } else {
     _impl_._has_bits_[0] &= ~0x00000001u;
   }
-  _impl_.valuestring_.SetAllocated(valuestring, GetArenaForAllocation());
+  _impl_.kvdbpath_.SetAllocated(kvdbpath, GetArenaForAllocation());
 #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
-  if (_impl_.valuestring_.IsDefault()) {
-    _impl_.valuestring_.Set("", GetArenaForAllocation());
+  if (_impl_.kvdbpath_.IsDefault()) {
+    _impl_.kvdbpath_.Set("", GetArenaForAllocation());
   }
 #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
-  // @@protoc_insertion_point(field_set_allocated:com.wazuh.api.engine.test.test_Request.valueString)
+  // @@protoc_insertion_point(field_set_allocated:com.wazuh.api.engine.test.Run_Request.kvdbPath)
 }
 
-// optional .google.protobuf.Value anyJSON = 5;
-inline bool test_Request::_internal_has_anyjson() const {
+// optional string fileStorage = 2;
+inline bool Run_Request::_internal_has_filestorage() const {
   bool value = (_impl_._has_bits_[0] & 0x00000002u) != 0;
-  PROTOBUF_ASSUME(!value || _impl_.anyjson_ != nullptr);
   return value;
 }
-inline bool test_Request::has_anyjson() const {
-  return _internal_has_anyjson();
+inline bool Run_Request::has_filestorage() const {
+  return _internal_has_filestorage();
 }
-inline const ::PROTOBUF_NAMESPACE_ID::Value& test_Request::_internal_anyjson() const {
-  const ::PROTOBUF_NAMESPACE_ID::Value* p = _impl_.anyjson_;
-  return p != nullptr ? *p : reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Value&>(
-      ::PROTOBUF_NAMESPACE_ID::_Value_default_instance_);
-}
-inline const ::PROTOBUF_NAMESPACE_ID::Value& test_Request::anyjson() const {
-  // @@protoc_insertion_point(field_get:com.wazuh.api.engine.test.test_Request.anyJSON)
-  return _internal_anyjson();
-}
-inline void test_Request::unsafe_arena_set_allocated_anyjson(
-    ::PROTOBUF_NAMESPACE_ID::Value* anyjson) {
-  if (GetArenaForAllocation() == nullptr) {
-    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.anyjson_);
-  }
-  _impl_.anyjson_ = anyjson;
-  if (anyjson) {
-    _impl_._has_bits_[0] |= 0x00000002u;
-  } else {
-    _impl_._has_bits_[0] &= ~0x00000002u;
-  }
-  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:com.wazuh.api.engine.test.test_Request.anyJSON)
-}
-inline ::PROTOBUF_NAMESPACE_ID::Value* test_Request::release_anyjson() {
+inline void Run_Request::clear_filestorage() {
+  _impl_.filestorage_.ClearToEmpty();
   _impl_._has_bits_[0] &= ~0x00000002u;
-  ::PROTOBUF_NAMESPACE_ID::Value* temp = _impl_.anyjson_;
-  _impl_.anyjson_ = nullptr;
-#ifdef PROTOBUF_FORCE_COPY_IN_RELEASE
-  auto* old =  reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(temp);
-  temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
-  if (GetArenaForAllocation() == nullptr) { delete old; }
-#else  // PROTOBUF_FORCE_COPY_IN_RELEASE
-  if (GetArenaForAllocation() != nullptr) {
-    temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
-  }
-#endif  // !PROTOBUF_FORCE_COPY_IN_RELEASE
-  return temp;
 }
-inline ::PROTOBUF_NAMESPACE_ID::Value* test_Request::unsafe_arena_release_anyjson() {
-  // @@protoc_insertion_point(field_release:com.wazuh.api.engine.test.test_Request.anyJSON)
-  _impl_._has_bits_[0] &= ~0x00000002u;
-  ::PROTOBUF_NAMESPACE_ID::Value* temp = _impl_.anyjson_;
-  _impl_.anyjson_ = nullptr;
-  return temp;
+inline const std::string& Run_Request::filestorage() const {
+  // @@protoc_insertion_point(field_get:com.wazuh.api.engine.test.Run_Request.fileStorage)
+  return _internal_filestorage();
 }
-inline ::PROTOBUF_NAMESPACE_ID::Value* test_Request::_internal_mutable_anyjson() {
+template <typename ArgT0, typename... ArgT>
+inline PROTOBUF_ALWAYS_INLINE
+void Run_Request::set_filestorage(ArgT0&& arg0, ArgT... args) {
+ _impl_._has_bits_[0] |= 0x00000002u;
+ _impl_.filestorage_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:com.wazuh.api.engine.test.Run_Request.fileStorage)
+}
+inline std::string* Run_Request::mutable_filestorage() {
+  std::string* _s = _internal_mutable_filestorage();
+  // @@protoc_insertion_point(field_mutable:com.wazuh.api.engine.test.Run_Request.fileStorage)
+  return _s;
+}
+inline const std::string& Run_Request::_internal_filestorage() const {
+  return _impl_.filestorage_.Get();
+}
+inline void Run_Request::_internal_set_filestorage(const std::string& value) {
   _impl_._has_bits_[0] |= 0x00000002u;
-  if (_impl_.anyjson_ == nullptr) {
-    auto* p = CreateMaybeMessage<::PROTOBUF_NAMESPACE_ID::Value>(GetArenaForAllocation());
-    _impl_.anyjson_ = p;
-  }
-  return _impl_.anyjson_;
+  _impl_.filestorage_.Set(value, GetArenaForAllocation());
 }
-inline ::PROTOBUF_NAMESPACE_ID::Value* test_Request::mutable_anyjson() {
-  ::PROTOBUF_NAMESPACE_ID::Value* _msg = _internal_mutable_anyjson();
-  // @@protoc_insertion_point(field_mutable:com.wazuh.api.engine.test.test_Request.anyJSON)
-  return _msg;
+inline std::string* Run_Request::_internal_mutable_filestorage() {
+  _impl_._has_bits_[0] |= 0x00000002u;
+  return _impl_.filestorage_.Mutable(GetArenaForAllocation());
 }
-inline void test_Request::set_allocated_anyjson(::PROTOBUF_NAMESPACE_ID::Value* anyjson) {
-  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
-  if (message_arena == nullptr) {
-    delete reinterpret_cast< ::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.anyjson_);
+inline std::string* Run_Request::release_filestorage() {
+  // @@protoc_insertion_point(field_release:com.wazuh.api.engine.test.Run_Request.fileStorage)
+  if (!_internal_has_filestorage()) {
+    return nullptr;
   }
-  if (anyjson) {
-    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
-        ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(
-                reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(anyjson));
-    if (message_arena != submessage_arena) {
-      anyjson = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
-          message_arena, anyjson, submessage_arena);
-    }
+  _impl_._has_bits_[0] &= ~0x00000002u;
+  auto* p = _impl_.filestorage_.Release();
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (_impl_.filestorage_.IsDefault()) {
+    _impl_.filestorage_.Set("", GetArenaForAllocation());
+  }
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  return p;
+}
+inline void Run_Request::set_allocated_filestorage(std::string* filestorage) {
+  if (filestorage != nullptr) {
     _impl_._has_bits_[0] |= 0x00000002u;
   } else {
     _impl_._has_bits_[0] &= ~0x00000002u;
   }
-  _impl_.anyjson_ = anyjson;
-  // @@protoc_insertion_point(field_set_allocated:com.wazuh.api.engine.test.test_Request.anyJSON)
+  _impl_.filestorage_.SetAllocated(filestorage, GetArenaForAllocation());
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (_impl_.filestorage_.IsDefault()) {
+    _impl_.filestorage_.Set("", GetArenaForAllocation());
+  }
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:com.wazuh.api.engine.test.Run_Request.fileStorage)
+}
+
+// optional string policy = 3;
+inline bool Run_Request::_internal_has_policy() const {
+  bool value = (_impl_._has_bits_[0] & 0x00000004u) != 0;
+  return value;
+}
+inline bool Run_Request::has_policy() const {
+  return _internal_has_policy();
+}
+inline void Run_Request::clear_policy() {
+  _impl_.policy_.ClearToEmpty();
+  _impl_._has_bits_[0] &= ~0x00000004u;
+}
+inline const std::string& Run_Request::policy() const {
+  // @@protoc_insertion_point(field_get:com.wazuh.api.engine.test.Run_Request.policy)
+  return _internal_policy();
+}
+template <typename ArgT0, typename... ArgT>
+inline PROTOBUF_ALWAYS_INLINE
+void Run_Request::set_policy(ArgT0&& arg0, ArgT... args) {
+ _impl_._has_bits_[0] |= 0x00000004u;
+ _impl_.policy_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:com.wazuh.api.engine.test.Run_Request.policy)
+}
+inline std::string* Run_Request::mutable_policy() {
+  std::string* _s = _internal_mutable_policy();
+  // @@protoc_insertion_point(field_mutable:com.wazuh.api.engine.test.Run_Request.policy)
+  return _s;
+}
+inline const std::string& Run_Request::_internal_policy() const {
+  return _impl_.policy_.Get();
+}
+inline void Run_Request::_internal_set_policy(const std::string& value) {
+  _impl_._has_bits_[0] |= 0x00000004u;
+  _impl_.policy_.Set(value, GetArenaForAllocation());
+}
+inline std::string* Run_Request::_internal_mutable_policy() {
+  _impl_._has_bits_[0] |= 0x00000004u;
+  return _impl_.policy_.Mutable(GetArenaForAllocation());
+}
+inline std::string* Run_Request::release_policy() {
+  // @@protoc_insertion_point(field_release:com.wazuh.api.engine.test.Run_Request.policy)
+  if (!_internal_has_policy()) {
+    return nullptr;
+  }
+  _impl_._has_bits_[0] &= ~0x00000004u;
+  auto* p = _impl_.policy_.Release();
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (_impl_.policy_.IsDefault()) {
+    _impl_.policy_.Set("", GetArenaForAllocation());
+  }
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  return p;
+}
+inline void Run_Request::set_allocated_policy(std::string* policy) {
+  if (policy != nullptr) {
+    _impl_._has_bits_[0] |= 0x00000004u;
+  } else {
+    _impl_._has_bits_[0] &= ~0x00000004u;
+  }
+  _impl_.policy_.SetAllocated(policy, GetArenaForAllocation());
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (_impl_.policy_.IsDefault()) {
+    _impl_.policy_.Set("", GetArenaForAllocation());
+  }
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:com.wazuh.api.engine.test.Run_Request.policy)
+}
+
+// optional string logLevel = 4;
+inline bool Run_Request::_internal_has_loglevel() const {
+  bool value = (_impl_._has_bits_[0] & 0x00000008u) != 0;
+  return value;
+}
+inline bool Run_Request::has_loglevel() const {
+  return _internal_has_loglevel();
+}
+inline void Run_Request::clear_loglevel() {
+  _impl_.loglevel_.ClearToEmpty();
+  _impl_._has_bits_[0] &= ~0x00000008u;
+}
+inline const std::string& Run_Request::loglevel() const {
+  // @@protoc_insertion_point(field_get:com.wazuh.api.engine.test.Run_Request.logLevel)
+  return _internal_loglevel();
+}
+template <typename ArgT0, typename... ArgT>
+inline PROTOBUF_ALWAYS_INLINE
+void Run_Request::set_loglevel(ArgT0&& arg0, ArgT... args) {
+ _impl_._has_bits_[0] |= 0x00000008u;
+ _impl_.loglevel_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:com.wazuh.api.engine.test.Run_Request.logLevel)
+}
+inline std::string* Run_Request::mutable_loglevel() {
+  std::string* _s = _internal_mutable_loglevel();
+  // @@protoc_insertion_point(field_mutable:com.wazuh.api.engine.test.Run_Request.logLevel)
+  return _s;
+}
+inline const std::string& Run_Request::_internal_loglevel() const {
+  return _impl_.loglevel_.Get();
+}
+inline void Run_Request::_internal_set_loglevel(const std::string& value) {
+  _impl_._has_bits_[0] |= 0x00000008u;
+  _impl_.loglevel_.Set(value, GetArenaForAllocation());
+}
+inline std::string* Run_Request::_internal_mutable_loglevel() {
+  _impl_._has_bits_[0] |= 0x00000008u;
+  return _impl_.loglevel_.Mutable(GetArenaForAllocation());
+}
+inline std::string* Run_Request::release_loglevel() {
+  // @@protoc_insertion_point(field_release:com.wazuh.api.engine.test.Run_Request.logLevel)
+  if (!_internal_has_loglevel()) {
+    return nullptr;
+  }
+  _impl_._has_bits_[0] &= ~0x00000008u;
+  auto* p = _impl_.loglevel_.Release();
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (_impl_.loglevel_.IsDefault()) {
+    _impl_.loglevel_.Set("", GetArenaForAllocation());
+  }
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  return p;
+}
+inline void Run_Request::set_allocated_loglevel(std::string* loglevel) {
+  if (loglevel != nullptr) {
+    _impl_._has_bits_[0] |= 0x00000008u;
+  } else {
+    _impl_._has_bits_[0] &= ~0x00000008u;
+  }
+  _impl_.loglevel_.SetAllocated(loglevel, GetArenaForAllocation());
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (_impl_.loglevel_.IsDefault()) {
+    _impl_.loglevel_.Set("", GetArenaForAllocation());
+  }
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:com.wazuh.api.engine.test.Run_Request.logLevel)
+}
+
+// optional int32 debugLevel = 5;
+inline bool Run_Request::_internal_has_debuglevel() const {
+  bool value = (_impl_._has_bits_[0] & 0x00000040u) != 0;
+  return value;
+}
+inline bool Run_Request::has_debuglevel() const {
+  return _internal_has_debuglevel();
+}
+inline void Run_Request::clear_debuglevel() {
+  _impl_.debuglevel_ = 0;
+  _impl_._has_bits_[0] &= ~0x00000040u;
+}
+inline int32_t Run_Request::_internal_debuglevel() const {
+  return _impl_.debuglevel_;
+}
+inline int32_t Run_Request::debuglevel() const {
+  // @@protoc_insertion_point(field_get:com.wazuh.api.engine.test.Run_Request.debugLevel)
+  return _internal_debuglevel();
+}
+inline void Run_Request::_internal_set_debuglevel(int32_t value) {
+  _impl_._has_bits_[0] |= 0x00000040u;
+  _impl_.debuglevel_ = value;
+}
+inline void Run_Request::set_debuglevel(int32_t value) {
+  _internal_set_debuglevel(value);
+  // @@protoc_insertion_point(field_set:com.wazuh.api.engine.test.Run_Request.debugLevel)
+}
+
+// repeated string assetTrace = 6;
+inline int Run_Request::_internal_assettrace_size() const {
+  return _impl_.assettrace_.size();
+}
+inline int Run_Request::assettrace_size() const {
+  return _internal_assettrace_size();
+}
+inline void Run_Request::clear_assettrace() {
+  _impl_.assettrace_.Clear();
+}
+inline std::string* Run_Request::add_assettrace() {
+  std::string* _s = _internal_add_assettrace();
+  // @@protoc_insertion_point(field_add_mutable:com.wazuh.api.engine.test.Run_Request.assetTrace)
+  return _s;
+}
+inline const std::string& Run_Request::_internal_assettrace(int index) const {
+  return _impl_.assettrace_.Get(index);
+}
+inline const std::string& Run_Request::assettrace(int index) const {
+  // @@protoc_insertion_point(field_get:com.wazuh.api.engine.test.Run_Request.assetTrace)
+  return _internal_assettrace(index);
+}
+inline std::string* Run_Request::mutable_assettrace(int index) {
+  // @@protoc_insertion_point(field_mutable:com.wazuh.api.engine.test.Run_Request.assetTrace)
+  return _impl_.assettrace_.Mutable(index);
+}
+inline void Run_Request::set_assettrace(int index, const std::string& value) {
+  _impl_.assettrace_.Mutable(index)->assign(value);
+  // @@protoc_insertion_point(field_set:com.wazuh.api.engine.test.Run_Request.assetTrace)
+}
+inline void Run_Request::set_assettrace(int index, std::string&& value) {
+  _impl_.assettrace_.Mutable(index)->assign(std::move(value));
+  // @@protoc_insertion_point(field_set:com.wazuh.api.engine.test.Run_Request.assetTrace)
+}
+inline void Run_Request::set_assettrace(int index, const char* value) {
+  GOOGLE_DCHECK(value != nullptr);
+  _impl_.assettrace_.Mutable(index)->assign(value);
+  // @@protoc_insertion_point(field_set_char:com.wazuh.api.engine.test.Run_Request.assetTrace)
+}
+inline void Run_Request::set_assettrace(int index, const char* value, size_t size) {
+  _impl_.assettrace_.Mutable(index)->assign(
+    reinterpret_cast<const char*>(value), size);
+  // @@protoc_insertion_point(field_set_pointer:com.wazuh.api.engine.test.Run_Request.assetTrace)
+}
+inline std::string* Run_Request::_internal_add_assettrace() {
+  return _impl_.assettrace_.Add();
+}
+inline void Run_Request::add_assettrace(const std::string& value) {
+  _impl_.assettrace_.Add()->assign(value);
+  // @@protoc_insertion_point(field_add:com.wazuh.api.engine.test.Run_Request.assetTrace)
+}
+inline void Run_Request::add_assettrace(std::string&& value) {
+  _impl_.assettrace_.Add(std::move(value));
+  // @@protoc_insertion_point(field_add:com.wazuh.api.engine.test.Run_Request.assetTrace)
+}
+inline void Run_Request::add_assettrace(const char* value) {
+  GOOGLE_DCHECK(value != nullptr);
+  _impl_.assettrace_.Add()->assign(value);
+  // @@protoc_insertion_point(field_add_char:com.wazuh.api.engine.test.Run_Request.assetTrace)
+}
+inline void Run_Request::add_assettrace(const char* value, size_t size) {
+  _impl_.assettrace_.Add()->assign(reinterpret_cast<const char*>(value), size);
+  // @@protoc_insertion_point(field_add_pointer:com.wazuh.api.engine.test.Run_Request.assetTrace)
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<std::string>&
+Run_Request::assettrace() const {
+  // @@protoc_insertion_point(field_list:com.wazuh.api.engine.test.Run_Request.assetTrace)
+  return _impl_.assettrace_;
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<std::string>*
+Run_Request::mutable_assettrace() {
+  // @@protoc_insertion_point(field_mutable_list:com.wazuh.api.engine.test.Run_Request.assetTrace)
+  return &_impl_.assettrace_;
+}
+
+// optional bytes protocolQueue = 7;
+inline bool Run_Request::_internal_has_protocolqueue() const {
+  bool value = (_impl_._has_bits_[0] & 0x00000010u) != 0;
+  return value;
+}
+inline bool Run_Request::has_protocolqueue() const {
+  return _internal_has_protocolqueue();
+}
+inline void Run_Request::clear_protocolqueue() {
+  _impl_.protocolqueue_.ClearToEmpty();
+  _impl_._has_bits_[0] &= ~0x00000010u;
+}
+inline const std::string& Run_Request::protocolqueue() const {
+  // @@protoc_insertion_point(field_get:com.wazuh.api.engine.test.Run_Request.protocolQueue)
+  return _internal_protocolqueue();
+}
+template <typename ArgT0, typename... ArgT>
+inline PROTOBUF_ALWAYS_INLINE
+void Run_Request::set_protocolqueue(ArgT0&& arg0, ArgT... args) {
+ _impl_._has_bits_[0] |= 0x00000010u;
+ _impl_.protocolqueue_.SetBytes(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:com.wazuh.api.engine.test.Run_Request.protocolQueue)
+}
+inline std::string* Run_Request::mutable_protocolqueue() {
+  std::string* _s = _internal_mutable_protocolqueue();
+  // @@protoc_insertion_point(field_mutable:com.wazuh.api.engine.test.Run_Request.protocolQueue)
+  return _s;
+}
+inline const std::string& Run_Request::_internal_protocolqueue() const {
+  return _impl_.protocolqueue_.Get();
+}
+inline void Run_Request::_internal_set_protocolqueue(const std::string& value) {
+  _impl_._has_bits_[0] |= 0x00000010u;
+  _impl_.protocolqueue_.Set(value, GetArenaForAllocation());
+}
+inline std::string* Run_Request::_internal_mutable_protocolqueue() {
+  _impl_._has_bits_[0] |= 0x00000010u;
+  return _impl_.protocolqueue_.Mutable(GetArenaForAllocation());
+}
+inline std::string* Run_Request::release_protocolqueue() {
+  // @@protoc_insertion_point(field_release:com.wazuh.api.engine.test.Run_Request.protocolQueue)
+  if (!_internal_has_protocolqueue()) {
+    return nullptr;
+  }
+  _impl_._has_bits_[0] &= ~0x00000010u;
+  auto* p = _impl_.protocolqueue_.Release();
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (_impl_.protocolqueue_.IsDefault()) {
+    _impl_.protocolqueue_.Set("", GetArenaForAllocation());
+  }
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  return p;
+}
+inline void Run_Request::set_allocated_protocolqueue(std::string* protocolqueue) {
+  if (protocolqueue != nullptr) {
+    _impl_._has_bits_[0] |= 0x00000010u;
+  } else {
+    _impl_._has_bits_[0] &= ~0x00000010u;
+  }
+  _impl_.protocolqueue_.SetAllocated(protocolqueue, GetArenaForAllocation());
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (_impl_.protocolqueue_.IsDefault()) {
+    _impl_.protocolqueue_.Set("", GetArenaForAllocation());
+  }
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:com.wazuh.api.engine.test.Run_Request.protocolQueue)
+}
+
+// optional string protocolLocation = 8;
+inline bool Run_Request::_internal_has_protocollocation() const {
+  bool value = (_impl_._has_bits_[0] & 0x00000020u) != 0;
+  return value;
+}
+inline bool Run_Request::has_protocollocation() const {
+  return _internal_has_protocollocation();
+}
+inline void Run_Request::clear_protocollocation() {
+  _impl_.protocollocation_.ClearToEmpty();
+  _impl_._has_bits_[0] &= ~0x00000020u;
+}
+inline const std::string& Run_Request::protocollocation() const {
+  // @@protoc_insertion_point(field_get:com.wazuh.api.engine.test.Run_Request.protocolLocation)
+  return _internal_protocollocation();
+}
+template <typename ArgT0, typename... ArgT>
+inline PROTOBUF_ALWAYS_INLINE
+void Run_Request::set_protocollocation(ArgT0&& arg0, ArgT... args) {
+ _impl_._has_bits_[0] |= 0x00000020u;
+ _impl_.protocollocation_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:com.wazuh.api.engine.test.Run_Request.protocolLocation)
+}
+inline std::string* Run_Request::mutable_protocollocation() {
+  std::string* _s = _internal_mutable_protocollocation();
+  // @@protoc_insertion_point(field_mutable:com.wazuh.api.engine.test.Run_Request.protocolLocation)
+  return _s;
+}
+inline const std::string& Run_Request::_internal_protocollocation() const {
+  return _impl_.protocollocation_.Get();
+}
+inline void Run_Request::_internal_set_protocollocation(const std::string& value) {
+  _impl_._has_bits_[0] |= 0x00000020u;
+  _impl_.protocollocation_.Set(value, GetArenaForAllocation());
+}
+inline std::string* Run_Request::_internal_mutable_protocollocation() {
+  _impl_._has_bits_[0] |= 0x00000020u;
+  return _impl_.protocollocation_.Mutable(GetArenaForAllocation());
+}
+inline std::string* Run_Request::release_protocollocation() {
+  // @@protoc_insertion_point(field_release:com.wazuh.api.engine.test.Run_Request.protocolLocation)
+  if (!_internal_has_protocollocation()) {
+    return nullptr;
+  }
+  _impl_._has_bits_[0] &= ~0x00000020u;
+  auto* p = _impl_.protocollocation_.Release();
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (_impl_.protocollocation_.IsDefault()) {
+    _impl_.protocollocation_.Set("", GetArenaForAllocation());
+  }
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  return p;
+}
+inline void Run_Request::set_allocated_protocollocation(std::string* protocollocation) {
+  if (protocollocation != nullptr) {
+    _impl_._has_bits_[0] |= 0x00000020u;
+  } else {
+    _impl_._has_bits_[0] &= ~0x00000020u;
+  }
+  _impl_.protocollocation_.SetAllocated(protocollocation, GetArenaForAllocation());
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (_impl_.protocollocation_.IsDefault()) {
+    _impl_.protocollocation_.Set("", GetArenaForAllocation());
+  }
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:com.wazuh.api.engine.test.Run_Request.protocolLocation)
 }
 
 // -------------------------------------------------------------------
 
-// test_Response
+// Run_Response
 
 // .com.wazuh.api.engine.ReturnStatus status = 1;
-inline void test_Response::clear_status() {
+inline void Run_Response::clear_status() {
   _impl_.status_ = 0;
 }
-inline ::com::wazuh::api::engine::ReturnStatus test_Response::_internal_status() const {
+inline ::com::wazuh::api::engine::ReturnStatus Run_Response::_internal_status() const {
   return static_cast< ::com::wazuh::api::engine::ReturnStatus >(_impl_.status_);
 }
-inline ::com::wazuh::api::engine::ReturnStatus test_Response::status() const {
-  // @@protoc_insertion_point(field_get:com.wazuh.api.engine.test.test_Response.status)
+inline ::com::wazuh::api::engine::ReturnStatus Run_Response::status() const {
+  // @@protoc_insertion_point(field_get:com.wazuh.api.engine.test.Run_Response.status)
   return _internal_status();
 }
-inline void test_Response::_internal_set_status(::com::wazuh::api::engine::ReturnStatus value) {
+inline void Run_Response::_internal_set_status(::com::wazuh::api::engine::ReturnStatus value) {
   
   _impl_.status_ = value;
 }
-inline void test_Response::set_status(::com::wazuh::api::engine::ReturnStatus value) {
+inline void Run_Response::set_status(::com::wazuh::api::engine::ReturnStatus value) {
   _internal_set_status(value);
-  // @@protoc_insertion_point(field_set:com.wazuh.api.engine.test.test_Response.status)
+  // @@protoc_insertion_point(field_set:com.wazuh.api.engine.test.Run_Response.status)
 }
 
 // optional string error = 2;
-inline bool test_Response::_internal_has_error() const {
+inline bool Run_Response::_internal_has_error() const {
   bool value = (_impl_._has_bits_[0] & 0x00000001u) != 0;
   return value;
 }
-inline bool test_Response::has_error() const {
+inline bool Run_Response::has_error() const {
   return _internal_has_error();
 }
-inline void test_Response::clear_error() {
+inline void Run_Response::clear_error() {
   _impl_.error_.ClearToEmpty();
   _impl_._has_bits_[0] &= ~0x00000001u;
 }
-inline const std::string& test_Response::error() const {
-  // @@protoc_insertion_point(field_get:com.wazuh.api.engine.test.test_Response.error)
+inline const std::string& Run_Response::error() const {
+  // @@protoc_insertion_point(field_get:com.wazuh.api.engine.test.Run_Response.error)
   return _internal_error();
 }
 template <typename ArgT0, typename... ArgT>
 inline PROTOBUF_ALWAYS_INLINE
-void test_Response::set_error(ArgT0&& arg0, ArgT... args) {
+void Run_Response::set_error(ArgT0&& arg0, ArgT... args) {
  _impl_._has_bits_[0] |= 0x00000001u;
  _impl_.error_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
-  // @@protoc_insertion_point(field_set:com.wazuh.api.engine.test.test_Response.error)
+  // @@protoc_insertion_point(field_set:com.wazuh.api.engine.test.Run_Response.error)
 }
-inline std::string* test_Response::mutable_error() {
+inline std::string* Run_Response::mutable_error() {
   std::string* _s = _internal_mutable_error();
-  // @@protoc_insertion_point(field_mutable:com.wazuh.api.engine.test.test_Response.error)
+  // @@protoc_insertion_point(field_mutable:com.wazuh.api.engine.test.Run_Response.error)
   return _s;
 }
-inline const std::string& test_Response::_internal_error() const {
+inline const std::string& Run_Response::_internal_error() const {
   return _impl_.error_.Get();
 }
-inline void test_Response::_internal_set_error(const std::string& value) {
+inline void Run_Response::_internal_set_error(const std::string& value) {
   _impl_._has_bits_[0] |= 0x00000001u;
   _impl_.error_.Set(value, GetArenaForAllocation());
 }
-inline std::string* test_Response::_internal_mutable_error() {
+inline std::string* Run_Response::_internal_mutable_error() {
   _impl_._has_bits_[0] |= 0x00000001u;
   return _impl_.error_.Mutable(GetArenaForAllocation());
 }
-inline std::string* test_Response::release_error() {
-  // @@protoc_insertion_point(field_release:com.wazuh.api.engine.test.test_Response.error)
+inline std::string* Run_Response::release_error() {
+  // @@protoc_insertion_point(field_release:com.wazuh.api.engine.test.Run_Response.error)
   if (!_internal_has_error()) {
     return nullptr;
   }
@@ -830,7 +1159,7 @@ inline std::string* test_Response::release_error() {
 #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
   return p;
 }
-inline void test_Response::set_allocated_error(std::string* error) {
+inline void Run_Response::set_allocated_error(std::string* error) {
   if (error != nullptr) {
     _impl_._has_bits_[0] |= 0x00000001u;
   } else {
@@ -842,44 +1171,44 @@ inline void test_Response::set_allocated_error(std::string* error) {
     _impl_.error_.Set("", GetArenaForAllocation());
   }
 #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
-  // @@protoc_insertion_point(field_set_allocated:com.wazuh.api.engine.test.test_Response.error)
+  // @@protoc_insertion_point(field_set_allocated:com.wazuh.api.engine.test.Run_Response.error)
 }
 
-// optional .google.protobuf.Value valueObj = 3;
-inline bool test_Response::_internal_has_valueobj() const {
-  bool value = (_impl_._has_bits_[0] & 0x00000004u) != 0;
-  PROTOBUF_ASSUME(!value || _impl_.valueobj_ != nullptr);
+// optional .google.protobuf.Value value = 3;
+inline bool Run_Response::_internal_has_value() const {
+  bool value = (_impl_._has_bits_[0] & 0x00000002u) != 0;
+  PROTOBUF_ASSUME(!value || _impl_.value_ != nullptr);
   return value;
 }
-inline bool test_Response::has_valueobj() const {
-  return _internal_has_valueobj();
+inline bool Run_Response::has_value() const {
+  return _internal_has_value();
 }
-inline const ::PROTOBUF_NAMESPACE_ID::Value& test_Response::_internal_valueobj() const {
-  const ::PROTOBUF_NAMESPACE_ID::Value* p = _impl_.valueobj_;
+inline const ::PROTOBUF_NAMESPACE_ID::Value& Run_Response::_internal_value() const {
+  const ::PROTOBUF_NAMESPACE_ID::Value* p = _impl_.value_;
   return p != nullptr ? *p : reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Value&>(
       ::PROTOBUF_NAMESPACE_ID::_Value_default_instance_);
 }
-inline const ::PROTOBUF_NAMESPACE_ID::Value& test_Response::valueobj() const {
-  // @@protoc_insertion_point(field_get:com.wazuh.api.engine.test.test_Response.valueObj)
-  return _internal_valueobj();
+inline const ::PROTOBUF_NAMESPACE_ID::Value& Run_Response::value() const {
+  // @@protoc_insertion_point(field_get:com.wazuh.api.engine.test.Run_Response.value)
+  return _internal_value();
 }
-inline void test_Response::unsafe_arena_set_allocated_valueobj(
-    ::PROTOBUF_NAMESPACE_ID::Value* valueobj) {
+inline void Run_Response::unsafe_arena_set_allocated_value(
+    ::PROTOBUF_NAMESPACE_ID::Value* value) {
   if (GetArenaForAllocation() == nullptr) {
-    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.valueobj_);
+    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.value_);
   }
-  _impl_.valueobj_ = valueobj;
-  if (valueobj) {
-    _impl_._has_bits_[0] |= 0x00000004u;
+  _impl_.value_ = value;
+  if (value) {
+    _impl_._has_bits_[0] |= 0x00000002u;
   } else {
-    _impl_._has_bits_[0] &= ~0x00000004u;
+    _impl_._has_bits_[0] &= ~0x00000002u;
   }
-  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:com.wazuh.api.engine.test.test_Response.valueObj)
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:com.wazuh.api.engine.test.Run_Response.value)
 }
-inline ::PROTOBUF_NAMESPACE_ID::Value* test_Response::release_valueobj() {
-  _impl_._has_bits_[0] &= ~0x00000004u;
-  ::PROTOBUF_NAMESPACE_ID::Value* temp = _impl_.valueobj_;
-  _impl_.valueobj_ = nullptr;
+inline ::PROTOBUF_NAMESPACE_ID::Value* Run_Response::release_value() {
+  _impl_._has_bits_[0] &= ~0x00000002u;
+  ::PROTOBUF_NAMESPACE_ID::Value* temp = _impl_.value_;
+  _impl_.value_ = nullptr;
 #ifdef PROTOBUF_FORCE_COPY_IN_RELEASE
   auto* old =  reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(temp);
   temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
@@ -891,113 +1220,45 @@ inline ::PROTOBUF_NAMESPACE_ID::Value* test_Response::release_valueobj() {
 #endif  // !PROTOBUF_FORCE_COPY_IN_RELEASE
   return temp;
 }
-inline ::PROTOBUF_NAMESPACE_ID::Value* test_Response::unsafe_arena_release_valueobj() {
-  // @@protoc_insertion_point(field_release:com.wazuh.api.engine.test.test_Response.valueObj)
-  _impl_._has_bits_[0] &= ~0x00000004u;
-  ::PROTOBUF_NAMESPACE_ID::Value* temp = _impl_.valueobj_;
-  _impl_.valueobj_ = nullptr;
+inline ::PROTOBUF_NAMESPACE_ID::Value* Run_Response::unsafe_arena_release_value() {
+  // @@protoc_insertion_point(field_release:com.wazuh.api.engine.test.Run_Response.value)
+  _impl_._has_bits_[0] &= ~0x00000002u;
+  ::PROTOBUF_NAMESPACE_ID::Value* temp = _impl_.value_;
+  _impl_.value_ = nullptr;
   return temp;
 }
-inline ::PROTOBUF_NAMESPACE_ID::Value* test_Response::_internal_mutable_valueobj() {
-  _impl_._has_bits_[0] |= 0x00000004u;
-  if (_impl_.valueobj_ == nullptr) {
+inline ::PROTOBUF_NAMESPACE_ID::Value* Run_Response::_internal_mutable_value() {
+  _impl_._has_bits_[0] |= 0x00000002u;
+  if (_impl_.value_ == nullptr) {
     auto* p = CreateMaybeMessage<::PROTOBUF_NAMESPACE_ID::Value>(GetArenaForAllocation());
-    _impl_.valueobj_ = p;
+    _impl_.value_ = p;
   }
-  return _impl_.valueobj_;
+  return _impl_.value_;
 }
-inline ::PROTOBUF_NAMESPACE_ID::Value* test_Response::mutable_valueobj() {
-  ::PROTOBUF_NAMESPACE_ID::Value* _msg = _internal_mutable_valueobj();
-  // @@protoc_insertion_point(field_mutable:com.wazuh.api.engine.test.test_Response.valueObj)
+inline ::PROTOBUF_NAMESPACE_ID::Value* Run_Response::mutable_value() {
+  ::PROTOBUF_NAMESPACE_ID::Value* _msg = _internal_mutable_value();
+  // @@protoc_insertion_point(field_mutable:com.wazuh.api.engine.test.Run_Response.value)
   return _msg;
 }
-inline void test_Response::set_allocated_valueobj(::PROTOBUF_NAMESPACE_ID::Value* valueobj) {
+inline void Run_Response::set_allocated_value(::PROTOBUF_NAMESPACE_ID::Value* value) {
   ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
   if (message_arena == nullptr) {
-    delete reinterpret_cast< ::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.valueobj_);
+    delete reinterpret_cast< ::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.value_);
   }
-  if (valueobj) {
+  if (value) {
     ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
         ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(
-                reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(valueobj));
+                reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(value));
     if (message_arena != submessage_arena) {
-      valueobj = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
-          message_arena, valueobj, submessage_arena);
+      value = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, value, submessage_arena);
     }
-    _impl_._has_bits_[0] |= 0x00000004u;
-  } else {
-    _impl_._has_bits_[0] &= ~0x00000004u;
-  }
-  _impl_.valueobj_ = valueobj;
-  // @@protoc_insertion_point(field_set_allocated:com.wazuh.api.engine.test.test_Response.valueObj)
-}
-
-// optional string valueString = 4;
-inline bool test_Response::_internal_has_valuestring() const {
-  bool value = (_impl_._has_bits_[0] & 0x00000002u) != 0;
-  return value;
-}
-inline bool test_Response::has_valuestring() const {
-  return _internal_has_valuestring();
-}
-inline void test_Response::clear_valuestring() {
-  _impl_.valuestring_.ClearToEmpty();
-  _impl_._has_bits_[0] &= ~0x00000002u;
-}
-inline const std::string& test_Response::valuestring() const {
-  // @@protoc_insertion_point(field_get:com.wazuh.api.engine.test.test_Response.valueString)
-  return _internal_valuestring();
-}
-template <typename ArgT0, typename... ArgT>
-inline PROTOBUF_ALWAYS_INLINE
-void test_Response::set_valuestring(ArgT0&& arg0, ArgT... args) {
- _impl_._has_bits_[0] |= 0x00000002u;
- _impl_.valuestring_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
-  // @@protoc_insertion_point(field_set:com.wazuh.api.engine.test.test_Response.valueString)
-}
-inline std::string* test_Response::mutable_valuestring() {
-  std::string* _s = _internal_mutable_valuestring();
-  // @@protoc_insertion_point(field_mutable:com.wazuh.api.engine.test.test_Response.valueString)
-  return _s;
-}
-inline const std::string& test_Response::_internal_valuestring() const {
-  return _impl_.valuestring_.Get();
-}
-inline void test_Response::_internal_set_valuestring(const std::string& value) {
-  _impl_._has_bits_[0] |= 0x00000002u;
-  _impl_.valuestring_.Set(value, GetArenaForAllocation());
-}
-inline std::string* test_Response::_internal_mutable_valuestring() {
-  _impl_._has_bits_[0] |= 0x00000002u;
-  return _impl_.valuestring_.Mutable(GetArenaForAllocation());
-}
-inline std::string* test_Response::release_valuestring() {
-  // @@protoc_insertion_point(field_release:com.wazuh.api.engine.test.test_Response.valueString)
-  if (!_internal_has_valuestring()) {
-    return nullptr;
-  }
-  _impl_._has_bits_[0] &= ~0x00000002u;
-  auto* p = _impl_.valuestring_.Release();
-#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
-  if (_impl_.valuestring_.IsDefault()) {
-    _impl_.valuestring_.Set("", GetArenaForAllocation());
-  }
-#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
-  return p;
-}
-inline void test_Response::set_allocated_valuestring(std::string* valuestring) {
-  if (valuestring != nullptr) {
     _impl_._has_bits_[0] |= 0x00000002u;
   } else {
     _impl_._has_bits_[0] &= ~0x00000002u;
   }
-  _impl_.valuestring_.SetAllocated(valuestring, GetArenaForAllocation());
-#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
-  if (_impl_.valuestring_.IsDefault()) {
-    _impl_.valuestring_.Set("", GetArenaForAllocation());
-  }
-#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
-  // @@protoc_insertion_point(field_set_allocated:com.wazuh.api.engine.test.test_Response.valueString)
+  _impl_.value_ = value;
+  // @@protoc_insertion_point(field_set_allocated:com.wazuh.api.engine.test.Run_Response.value)
 }
 
 #ifdef __GNUC__

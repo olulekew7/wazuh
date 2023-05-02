@@ -28,8 +28,9 @@ add_library(api STATIC
     ${ENGINE_API_SOURCE_DIR}/integration/integration.cpp
     ${ENGINE_API_SOURCE_DIR}/kvdb/handlers.cpp
     ${ENGINE_API_SOURCE_DIR}/metrics/handlers.cpp
-    ${ENGINE_API_SOURCE_DIR}/registry.cpp
-    ${ENGINE_API_SOURCE_DIR}/router/handlers.cpp
+    ${ENGINE_API_SOURCE_DIR}/integration/integration.cpp
+    ${ENGINE_API_SOURCE_DIR}/integration/handlers.cpp
+    ${ENGINE_API_SOURCE_DIR}/test/handlers.cpp
 )
 
 target_include_directories(api
@@ -42,20 +43,8 @@ target_include_directories(api
     ${ENGINE_API_SOURCE_DIR}/integration
     ${ENGINE_API_SOURCE_DIR}/kvdb
     ${ENGINE_API_SOURCE_DIR}/metrics
-    ${ENGINE_API_SOURCE_DIR}/router
+    ${ENGINE_API_SOURCE_DIR}/test
+    ${ENGINE_API_SOURCE_DIR}/integration
 )
 
-target_link_libraries(api
-    base
-    builder::ivalidator
-    eMessages
-    fmt
-    json
-    kvdb
-    metrics
-    router
-    store::fileDriver
-    store::istore
-    yaml-cpp
-    schemf
-)
+target_link_libraries(api base json builder::ivalidator store::istore yaml-cpp fmt kvdb router eMessages metrics store::fileDriver cmds)
