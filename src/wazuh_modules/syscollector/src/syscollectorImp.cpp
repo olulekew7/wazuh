@@ -333,7 +333,7 @@ constexpr auto PACKAGES_SQL_STATEMENT
     item_id TEXT,
     PRIMARY KEY (name,version,architecture)) WITHOUT ROWID;)"
 };
-static const std::vector<std::string> PACKAGES_ITEM_ID_FIELDS{"name", "version", "architecture"};
+static const std::vector<std::string> PACKAGES_ITEM_ID_FIELDS{"name", "architecture"};
 
 constexpr auto PACKAGES_SYNC_CONFIG_STATEMENT
 {
