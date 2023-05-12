@@ -10,40 +10,40 @@ from api.models.base_model_ import Body
 
 class GroupAddedModel(Body):
 
-    def __init__(self, group_id: str = None):
+    def __init__(self, group_name: str = None):
         """GroupAddedModel body model.
 
         Parameters
         ----------
-        group_id : str
+        group_name : str
             Group name.
         """
         self.swagger_types = {
-            'group_id': str,
+            'group_name': str,
         }
 
         self.attribute_map = {
-            'group_id': 'group_id',
+            'group_name': 'group_name',
         }
 
-        self._group_id = group_id
+        self._group_name = group_name
 
     @property
-    def group_id(self) -> str:
+    def group_name(self) -> str:
         """Group name getter.
         Returns
         -------
-        group_id : str
+        group_name : str
             Group name.
         """
-        return self._group_id
+        return self._group_name
 
-    @group_id.setter
-    def group_id(self, group_id):
+    @group_name.setter
+    def group_name(self, group_name):
         """Group name setter.
         Parameters
         ----------
-        group_id : str
+        group_name : str
             Group name.
         """
-        self._group_id = group_id
+        self._group_name = group_name

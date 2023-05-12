@@ -183,19 +183,19 @@ def test_get_ossec_conf():
 
 def test_get_agent_conf():
     with pytest.raises(WazuhError, match=".* 1710 .*"):
-        configuration.get_agent_conf(group_id='noexists')
+        configuration.get_agent_conf(group_name='noexists')
 
     with patch('wazuh.core.common.SHARED_PATH', new=os.path.join(parent_directory, tmp_path, 'configuration')):
         with pytest.raises(WazuhError, match=".* 1006 .*"):
-            configuration.get_agent_conf(group_id='default', filename='noexists.conf')
+            configuration.get_agent_conf(group_name='default', filename='noexists.conf')
 
     with patch('wazuh.core.common.SHARED_PATH', new=os.path.join(parent_directory, tmp_path, 'configuration')):
         with patch('wazuh.core.configuration.load_wazuh_xml', return_value=Exception):
             with pytest.raises(WazuhError, match=".* 1101 .*"):
-                assert isinstance(configuration.get_agent_conf(group_id='default'), dict)
+                assert isinstance(configuration.get_agent_conf(group_name='default'), dict)
 
     with patch('wazuh.core.common.SHARED_PATH', new=os.path.join(parent_directory, tmp_path, 'configuration')):
-        assert configuration.get_agent_conf(group_id='default', filename='agent1.conf')['total_affected_items'] == 1
+        assert configuration.get_agent_conf(group_name='default', filename='agent1.conf')['total_affected_items'] == 1
 
 
 def test_get_agent_conf_multigroup():
@@ -204,51 +204,51 @@ def test_get_agent_conf_multigroup():
 
     with patch('wazuh.core.common.MULTI_GROUPS_PATH', new=os.path.join(parent_directory, tmp_path, 'configuration')):
         with pytest.raises(WazuhError, match=".* 1006 .*"):
-            configuration.get_agent_conf_multigroup(multigroup_id='multigroup', filename='noexists.conf')
+            configuration.get_agent_conf_multigroup(multigroup_name='multigroup', filename='noexists.conf')
 
     with patch('wazuh.core.common.MULTI_GROUPS_PATH', new=os.path.join(parent_directory, tmp_path, 'configuration')):
         with patch('wazuh.core.configuration.load_wazuh_xml', return_value=Exception):
             with pytest.raises(WazuhError, match=".* 1101 .*"):
-                configuration.get_agent_conf_multigroup(multigroup_id='multigroup')
+                configuration.get_agent_conf_multigroup(multigroup_name='multigroup')
 
     with patch('wazuh.core.common.MULTI_GROUPS_PATH', new=os.path.join(parent_directory, tmp_path, 'configuration')):
-        result = configuration.get_agent_conf_multigroup(multigroup_id='multigroup')
+        result = configuration.get_agent_conf_multigroup(multigroup_name='multigroup')
         assert set(result.keys()) == {'totalItems', 'items'}
 
 
 def test_get_file_conf():
     with patch('wazuh.core.common.SHARED_PATH', new=os.path.join(parent_directory, tmp_path, 'noexists')):
         with pytest.raises(WazuhError, match=".* 1710 .*"):
-            configuration.get_file_conf(filename='ossec.conf', group_id='default', type_conf='conf',
+            configuration.get_file_conf(filename='ossec.conf', group_name='default', type_conf='conf',
                                         return_format='xml')
 
     with patch('wazuh.core.common.SHARED_PATH', new=os.path.join(parent_directory, tmp_path, 'configuration')):
         with pytest.raises(WazuhError, match=".* 1006 .*"):
-            configuration.get_file_conf(filename='noexists.conf', group_id='default', type_conf='conf',
+            configuration.get_file_conf(filename='noexists.conf', group_name='default', type_conf='conf',
                                         return_format='xml')
 
     with patch('wazuh.core.common.SHARED_PATH', new=os.path.join(parent_directory, tmp_path, 'configuration')):
-        assert isinstance(configuration.get_file_conf(filename='agent.conf', group_id='default', type_conf='conf',
+        assert isinstance(configuration.get_file_conf(filename='agent.conf', group_name='default', type_conf='conf',
                                                       return_format='xml'), str)
-        assert isinstance(configuration.get_file_conf(filename='agent.conf', group_id='default', type_conf='rcl',
+        assert isinstance(configuration.get_file_conf(filename='agent.conf', group_name='default', type_conf='rcl',
                                                       return_format='xml'), dict)
-        assert isinstance(configuration.get_file_conf(filename='agent.conf', group_id='default',
+        assert isinstance(configuration.get_file_conf(filename='agent.conf', group_name='default',
                                                       return_format='xml'), str)
         rootkit_files = [{'filename': 'NEW_ELEMENT', 'name': 'FOR', 'link': 'TESTING'}]
-        assert configuration.get_file_conf(filename='rootkit_files.txt', group_id='default',
+        assert configuration.get_file_conf(filename='rootkit_files.txt', group_name='default',
                                            return_format='xml') == rootkit_files
         rootkit_trojans = [{'filename': 'NEW_ELEMENT', 'name': 'FOR', 'description': 'TESTING'}]
-        assert configuration.get_file_conf(filename='rootkit_trojans.txt', group_id='default',
+        assert configuration.get_file_conf(filename='rootkit_trojans.txt', group_name='default',
                                            return_format='xml') == rootkit_trojans
         ar_list = ['restart-ossec0 - restart-ossec.sh - 0', 'restart-ossec0 - restart-ossec.cmd - 0',
                    'restart-wazuh0 - restart-ossec.sh - 0', 'restart-wazuh0 - restart-ossec.cmd - 0',
                    'restart-wazuh0 - restart-wazuh - 0', 'restart-wazuh0 - restart-wazuh.exe - 0']
-        assert configuration.get_file_conf(filename='ar.conf', group_id='default', return_format='xml') == ar_list
+        assert configuration.get_file_conf(filename='ar.conf', group_name='default', return_format='xml') == ar_list
         rcl = {'vars': {}, 'controls': [{}, {'name': 'NEW_ELEMENT', 'cis': [], 'pci': [], 'condition': 'FOR',
                                              'reference': 'TESTING', 'checks': []}]}
-        assert configuration.get_file_conf(filename='rcl.conf', group_id='default', return_format='xml') == rcl
+        assert configuration.get_file_conf(filename='rcl.conf', group_name='default', return_format='xml') == rcl
         with pytest.raises(WazuhError, match=".* 1104 .*"):
-            configuration.get_file_conf(filename='agent.conf', group_id='default', type_conf='noconf',
+            configuration.get_file_conf(filename='agent.conf', group_name='default', type_conf='noconf',
                                         return_format='xml')
 
 

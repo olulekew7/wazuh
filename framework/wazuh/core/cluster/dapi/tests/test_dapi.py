@@ -485,13 +485,13 @@ def test_DistributedAPI_get_solver_node(mock_cluster_status, mock_agents_overvie
             expected.affected_items = [{'id': '001', 'node_name': 'master'}]
             with patch('wazuh.agent.get_agents_in_group', return_value=expected):
                 dapi_kwargs = {'f': manager.status, 'logger': logger, 'request_type': 'distributed_master',
-                               'f_kwargs': {'group_id': 'default'}, 'nodes': ['master']}
+                               'f_kwargs': {'group_name': 'default'}, 'nodes': ['master']}
                 raise_if_exc_routine(dapi_kwargs=dapi_kwargs)
 
             expected.affected_items = []
             with patch('wazuh.agent.get_agents_in_group', return_value=expected):
                 dapi_kwargs = {'f': manager.status, 'logger': logger, 'request_type': 'distributed_master',
-                               'f_kwargs': {'group_id': 'noexist'}, 'nodes': ['master']}
+                               'f_kwargs': {'group_name': 'noexist'}, 'nodes': ['master']}
                 raise_if_exc_routine(dapi_kwargs=dapi_kwargs)
 
             dapi_kwargs = {'f': manager.status, 'logger': logger, 'request_type': 'distributed_master',

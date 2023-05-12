@@ -360,7 +360,7 @@ def get_agents_in_group(group_list: list, offset: int = 0, limit: int = common.D
     Parameters
     ----------
     group_list : list
-        List containing the group ID.
+        List containing group names.
     offset : int
         First element to return in the collection.
     limit : int
@@ -391,6 +391,7 @@ def get_agents_in_group(group_list: list, offset: int = 0, limit: int = common.D
     if group_list[0] not in system_groups:
         raise WazuhResourceNotFound(1710)
 
+    # TODO: query the belongs table to look for the relationship agent-group and then do the query to the agent table
     q = 'group=' + group_list[0] + (';' + q if q else '')
 
     return get_agents(offset=offset, limit=limit, sort=sort, search=search, select=select, filters=filters, q=q)
@@ -650,19 +651,19 @@ def get_group_files(group_list: list = None, offset: int = 0, limit: int = None,
     WazuhResult
         WazuhResult object with the groups files.
     """
-    # We access unique group_id from list, this may change if and when we decide to add option to get files for
+    # We access unique group_name from list, this may change if and when we decide to add option to get files for
     # a list of groups
-    group_id = group_list[0]
+    group_name = group_list[0]
     group_path = common.SHARED_PATH
     result = AffectedItemsWazuhResult(all_msg='All selected groups files were returned',
                                       some_msg='Some groups files were not returned',
                                       none_msg='No groups files were returned'
                                       )
-    if group_id:
-        if not Agent.group_exists(group_id):
-            result.add_failed_item(id_=group_id, error=WazuhResourceNotFound(1710))
+    if group_name:
+        if not Agent.group_exists(group_name):
+            result.add_failed_item(id_=group_name, error=WazuhResourceNotFound(1710))
             return result
-        group_path = path.join(common.SHARED_PATH, group_id)
+        group_path = path.join(common.SHARED_PATH, group_name)
 
     if not path.exists(group_path):
         result.add_failed_item(id_=group_path, error=WazuhError(1006))
@@ -694,13 +695,13 @@ def get_group_files(group_list: list = None, offset: int = 0, limit: int = None,
 
 
 @expose_resources(actions=["group:create"], resources=["*:*:*"], post_proc_func=None)
-def create_group(group_id: str) -> WazuhResult:
+def create_group(group_name: str) -> WazuhResult:
     """Creates a group.
 
     Parameters
     ----------
-    group_id : str
-        Group ID.
+    group_name : str
+        Group name.
 
     Raises
     ------
@@ -709,7 +710,7 @@ def create_group(group_id: str) -> WazuhResult:
     WazuhError(1711)
         If the group already exists.
     WazuhError(1713)
-        If the group ID is not valid.
+        If the group name is not valid.
     WazuhInternalError(1005)
         If there was an error reading a file.
 
@@ -718,17 +719,17 @@ def create_group(group_id: str) -> WazuhResult:
     WazuhResult
         WazuhResult object with a operation message.
     """
-    # Input Validation of group_id
-    if not InputValidator().group(group_id):
+    # Input Validation of group_name
+    if not InputValidator().group(group_name):
         raise WazuhError(1722)
 
-    group_path = path.join(common.SHARED_PATH, group_id)
+    group_path = path.join(common.SHARED_PATH, group_name)
 
-    if group_id.lower() == "default" or path.exists(group_path):
+    if group_name.lower() == "default" or path.exists(group_path):
         if not path.isfile(group_path):
-            raise WazuhError(1711, extra_message=group_id)
+            raise WazuhError(1711, extra_message=group_name)
         else:
-            raise WazuhError(1713, extra_message=group_id)
+            raise WazuhError(1713, extra_message=group_name)
 
     # Create group in /etc/shared
     agent_conf_template = path.join(common.SHARED_PATH, 'agent-template.conf')
@@ -739,7 +740,7 @@ def create_group(group_id: str) -> WazuhResult:
         chown_r(group_path, common.wazuh_uid(), common.wazuh_gid())
         chmod_r(group_path, 0o660)
         chmod(group_path, 0o700)
-        msg = f"Group '{group_id}' created."
+        msg = f"Group '{group_name}' created."
     except Exception as e:
         raise WazuhInternalError(1005, extra_message=str(e))
 
@@ -766,18 +767,18 @@ def delete_groups(group_list: list = None) -> AffectedItemsWazuhResult:
                                       none_msg='No group was deleted')
 
     system_groups = get_groups()
-    for group_id in group_list:
+    for group_name in group_list:
         try:
             # Check if group exists
-            if group_id not in system_groups:
+            if group_name not in system_groups:
                 raise WazuhResourceNotFound(1710)
-            elif group_id == 'default':
+            elif group_name == 'default':
                 raise WazuhError(1712)
 
-            Agent.delete_single_group(group_id)
-            result.affected_items.append(group_id)
+            Agent.delete_single_group(group_name)
+            result.affected_items.append(group_name)
         except WazuhException as e:
-            result.add_failed_item(id_=group_id, error=e)
+            result.add_failed_item(id_=group_name, error=e)
 
     result.total_affected_items = len(result.affected_items)
 
@@ -795,7 +796,7 @@ def assign_agents_to_group(group_list: list = None, agent_list: list = None, rep
     Parameters
     ----------
     group_list : list
-        List with the group ID.
+        List with the group name.
     agent_list : list
         List of Agent IDs.
     replace :  bool
@@ -814,15 +815,15 @@ def assign_agents_to_group(group_list: list = None, agent_list: list = None, rep
     AffectedItemsWazuhResult
         Affected items.
     """
-    group_id = group_list[0]
-    result = AffectedItemsWazuhResult(all_msg=f'All selected agents were assigned to {group_id}'
+    group_name = group_list[0]
+    result = AffectedItemsWazuhResult(all_msg=f'All selected agents were assigned to {group_name}'
                                               f'{" and removed from the other groups" if replace else ""}',
-                                      some_msg=f'Some agents were not assigned to {group_id}'
+                                      some_msg=f'Some agents were not assigned to {group_name}'
                                                f'{" and removed from the other groups" if replace else ""}',
-                                      none_msg='No agents were assigned to {0}'.format(group_id)
+                                      none_msg='No agents were assigned to {0}'.format(group_name)
                                       )
     # Check if the group exists
-    if not Agent.group_exists(group_id):
+    if not Agent.group_exists(group_name):
         raise WazuhResourceNotFound(1710)
 
     system_agents = get_agents_info()
@@ -843,7 +844,7 @@ def assign_agents_to_group(group_list: list = None, agent_list: list = None, rep
 
     for agent_id in agent_list:
         try:
-            Agent.add_group_to_agent(group_id, agent_id, replace=replace, replace_list=replace_list)
+            Agent.add_group_to_agent(group_name, agent_id, replace=replace, replace_list=replace_list)
             result.affected_items.append(agent_id)
         except WazuhException as e:
             result.add_failed_item(id_=agent_id, error=e)
@@ -862,7 +863,7 @@ def remove_agent_from_group(group_list: list = None, agent_list: list = None) ->
     Parameters
     ----------
     group_list : list
-        List with the group ID.
+        List with group names.
     agent_list : list
         List with the agent ID.
 
@@ -880,7 +881,7 @@ def remove_agent_from_group(group_list: list = None, agent_list: list = None) ->
     WazuhResult
         Confirmation message.
     """
-    group_id = group_list[0]
+    group_name = group_list[0]
     agent_id = agent_list[0]
 
     # Check if agent and group exist and it is not 000
@@ -888,10 +889,10 @@ def remove_agent_from_group(group_list: list = None, agent_list: list = None) ->
         raise WazuhResourceNotFound(1701)
     if agent_id == '000':
         raise WazuhError(1703)
-    if group_id not in get_groups():
+    if group_name not in get_groups():
         raise WazuhResourceNotFound(1710)
 
-    return WazuhResult({'message': Agent.unset_single_group_agent(agent_id=agent_id, group_id=group_id, force=True)})
+    return WazuhResult({'message': Agent.unset_single_group_agent(agent_id=agent_id, group_name=group_name, force=True)})
 
 
 @expose_resources(actions=["agent:modify_group"], resources=["agent:id:{agent_list}"], post_proc_func=None)
@@ -939,14 +940,14 @@ def remove_agent_from_groups(agent_list: list = None, group_list: list = None) -
         pass
 
     system_groups = get_groups()
-    for group_id in group_list:
+    for group_name in group_list:
         try:
-            if group_id not in system_groups:
+            if group_name not in system_groups:
                 raise WazuhResourceNotFound(1710)
-            Agent.unset_single_group_agent(agent_id=agent_id, group_id=group_id, force=True)
-            result.affected_items.append(group_id)
+            Agent.unset_single_group_agent(agent_id=agent_id, group_name=group_name, force=True)
+            result.affected_items.append(group_name)
         except WazuhException as e:
-            result.add_failed_item(id_=group_id, error=e)
+            result.add_failed_item(id_=group_name, error=e)
     result.total_affected_items = len(result.affected_items)
     result.affected_items.sort()
 
@@ -962,7 +963,7 @@ def remove_agents_from_group(agent_list: list = None, group_list: list = None) -
     Parameters
     ----------
     group_list : list
-        List with the group ID.
+        List with the group name.
     agent_list : list
         List of Agent IDs.
 
@@ -976,16 +977,16 @@ def remove_agents_from_group(agent_list: list = None, group_list: list = None) -
     AffectedItemsWazuhResult
         Affected items.
     """
-    group_id = group_list[0]
-    result = AffectedItemsWazuhResult(all_msg=f'All selected agents were removed from group {group_id}',
-                                      some_msg=f'Some agents were not removed from group {group_id}',
-                                      none_msg=f'No agent was removed from group {group_id}'
+    group_name = group_list[0]
+    result = AffectedItemsWazuhResult(all_msg=f'All selected agents were removed from group {group_name}',
+                                      some_msg=f'Some agents were not removed from group {group_name}',
+                                      none_msg=f'No agent was removed from group {group_name}'
                                       )
 
     system_groups = get_groups()
     system_agents = get_agents_info()
     # Check if group exists
-    if group_id not in system_groups:
+    if group_name not in system_groups:
         raise WazuhResourceNotFound(1710)
 
     for agent_id in agent_list:
@@ -994,7 +995,7 @@ def remove_agents_from_group(agent_list: list = None, group_list: list = None) -
                 raise WazuhError(1703)
             elif agent_id not in system_agents:
                 raise WazuhResourceNotFound(1701)
-            Agent.unset_single_group_agent(agent_id=agent_id, group_id=group_id, force=True)
+            Agent.unset_single_group_agent(agent_id=agent_id, group_name=group_name, force=True)
             result.affected_items.append(agent_id)
         except WazuhException as e:
             result.add_failed_item(id_=agent_id, error=e)
@@ -1371,7 +1372,7 @@ def get_file_conf(group_list: list = None, type_conf: str = None, return_format:
     Parameters
     ----------
     group_list : list
-        List with the group ID.
+        List with the group name.
     type_conf : str
         Type of file.
     return_format : str
@@ -1384,11 +1385,11 @@ def get_file_conf(group_list: list = None, type_conf: str = None, return_format:
     WazuhResult
         WazuhResult object with the configuration.
     """
-    # We access unique group_id from list, this may change if and when we decide to add option to get configuration
+    # We access unique group_name from list, this may change if and when we decide to add option to get configuration
     # files for a list of groups
-    group_id = group_list[0]
+    group_name = group_list[0]
 
-    return WazuhResult({'data': configuration.get_file_conf(filename, group_id=group_id, type_conf=type_conf,
+    return WazuhResult({'data': configuration.get_file_conf(filename, group_name=group_name, type_conf=type_conf,
                                                             return_format=return_format)})
 
 
@@ -1400,7 +1401,7 @@ def get_agent_conf(group_list: list = None, filename: str = 'agent.conf', offset
     Parameters
     ----------
     group_list : list
-        List with the group ID.
+        List with the group name.
     filename : str
         Filename to read config from. Default: 'agent.conf'
     offset : int
@@ -1413,12 +1414,12 @@ def get_agent_conf(group_list: list = None, filename: str = 'agent.conf', offset
     WazuhResult
         WazuhResult object with the configuration.
     """
-    # We access unique group_id from list, this may change if and when we decide to add option to get agent conf for
+    # We access unique group_name from list, this may change if and when we decide to add option to get agent conf for
     # a list of groups
-    group_id = group_list[0]
+    group_name = group_list[0]
 
     return WazuhResult(
-        {'data': configuration.get_agent_conf(group_id=group_id, filename=filename, offset=offset, limit=limit)})
+        {'data': configuration.get_agent_conf(group_name=group_name, filename=filename, offset=offset, limit=limit)})
 
 
 @expose_resources(actions=["group:update_config"], resources=["group:id:{group_list}"], post_proc_func=None)
@@ -1428,7 +1429,7 @@ def upload_group_file(group_list: list = None, file_data: str = None, file_name:
     Parameters
     ----------
     group_list : list
-        List with the group ID.
+        List with the group name.
     file_data : str
         Relative path of temporary file to upload.
     file_name : str
@@ -1439,11 +1440,11 @@ def upload_group_file(group_list: list = None, file_data: str = None, file_name:
     WazuhResult
         WazuhResult object with the confirmation message.
     """
-    # We access unique group_id from list, this may change if and when we decide to add option to update files for
+    # We access unique group_name from list, this may change if and when we decide to add option to update files for
     # a list of groups
-    group_id = group_list[0]
+    group_name = group_list[0]
 
-    return WazuhResult({'message': configuration.upload_group_file(group_id, file_data, file_name=file_name)})
+    return WazuhResult({'message': configuration.upload_group_file(group_name, file_data, file_name=file_name)})
 
 
 def get_full_overview() -> WazuhResult:

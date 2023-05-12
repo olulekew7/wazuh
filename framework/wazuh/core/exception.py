@@ -248,16 +248,16 @@ class WazuhException(Exception):
                'remediation': 'Please, use `GET /agents/groups` to find all available groups'
                },
         1711: {'message': 'The group already exists',
-               'remediation': 'Please, use another group ID'
+               'remediation': 'Please, use another group name'
                },
         1712: {'message': 'Default group is not deletable',
                'remediation': f'Please, visit the official documentation (https://documentation.wazuh.com/'
                               f'{DOCU_VERSION}/user-manual/agents/grouping-agents.html)'
                               'to get more information'
                },
-        1713: {'message': 'Invalid group ID. Some IDs are restricted for internal purposes',
-               'remediation': 'Please, use another group ID'},
-        1722: {'message': 'Incorrect format for group_id',
+        1713: {'message': 'Invalid group name. Some names are restricted for internal purposes',
+               'remediation': 'Please, use another group name'},
+        1722: {'message': 'Incorrect format for group_name',
                'remediation': 'Characters supported  a-z, A-Z, 0-9, ., _ and -. Max length is 255'
                },
         1723: 'Hash algorithm not available',
@@ -271,7 +271,7 @@ class WazuhException(Exception):
                'remediation': 'Please enable authd or check if there is any error'
                },
         1727: {'message': 'Error listing group files',
-               'remediation': 'Please, use `GET /agents/groups/:group_id/files` to get all available group files'
+               'remediation': 'Please, use `GET /agents/groups/:group_name/files` to get all available group files'
                },
         1728: {'message': 'Invalid node type',
                'remediation': f'Valid types are `master` and `worker`. Please, visit https://documentation.wazuh.com/'

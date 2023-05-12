@@ -278,7 +278,7 @@ async def get_mitigations(request, mitigation_ids: list = None, pretty: bool = F
     return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
 
 
-async def get_groups(request, group_ids: list = None, pretty: bool = False, wait_for_complete: bool = False,
+async def get_groups(request, group_names: list = None, pretty: bool = False, wait_for_complete: bool = False,
                      offset: int = None, limit: int = None, sort: str = None, search: str = None, select: list = None,
                      q: str = None) -> web.Response:
     """Get information of specified MITRE's groups.
@@ -286,8 +286,8 @@ async def get_groups(request, group_ids: list = None, pretty: bool = False, wait
     Parameters
     ----------
     request : connexion.request
-    group_ids : list, optional
-        List of group IDs to be obtained.
+    group_names : list, optional
+        List of group names to be obtained.
     pretty : bool, optional
         Show results in human-readable format.
     wait_for_complete : bool, optional
@@ -313,7 +313,7 @@ async def get_groups(request, group_ids: list = None, pretty: bool = False, wait
     """
     f_kwargs = {
         'filters': {
-            'id': group_ids,
+            'id': group_names,
         },
         'offset': offset,
         'limit': limit,

@@ -454,7 +454,7 @@ async def get_sync_agent(request, agent_id: str, pretty: bool = False, wait_for_
     return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
 
 
-async def delete_single_agent_single_group(request, agent_id: str, group_id: str, pretty: bool = False,
+async def delete_single_agent_single_group(request, agent_id: str, group_name: str, pretty: bool = False,
                                            wait_for_complete: bool = False) -> web.Response:
     """Remove agent from a single group.
 
@@ -470,8 +470,8 @@ async def delete_single_agent_single_group(request, agent_id: str, group_id: str
         Disable timeout response.
     agent_id : str
         Agent ID. All possible values from 000 onwards.
-    group_id : str
-        ID of the group to remove the agent from.
+    group_name : str
+        Name of the group to remove the agent from.
 
     Returns
     -------
@@ -479,7 +479,7 @@ async def delete_single_agent_single_group(request, agent_id: str, group_id: str
         API response.
     """
     f_kwargs = {'agent_list': [agent_id],
-                'group_list': [group_id]}
+                'group_list': [group_name]}
 
     dapi = DistributedAPI(f=agent.remove_agent_from_group,
                           f_kwargs=remove_nones_to_dict(f_kwargs),
@@ -494,7 +494,7 @@ async def delete_single_agent_single_group(request, agent_id: str, group_id: str
     return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
 
 
-async def put_agent_single_group(request, agent_id: str, group_id: str, force_single_group: bool = False,
+async def put_agent_single_group(request, agent_id: str, group_name: str, force_single_group: bool = False,
                                  pretty: bool = False, wait_for_complete: bool = False) -> web.Response:
     """Assign an agent to the specified group.
 
@@ -507,8 +507,8 @@ async def put_agent_single_group(request, agent_id: str, group_id: str, force_si
         Disable timeout response.
     agent_id : str
         Agent ID. All possible values from 000 onwards.
-    group_id : str
-        ID of the group to remove the agent from.
+    group_name : str
+        Name of the group to remove the agent from.
     force_single_group : bool
         Forces the agent to belong to only the specified group.
 
@@ -518,7 +518,7 @@ async def put_agent_single_group(request, agent_id: str, group_id: str, force_si
         API response.
     """
     f_kwargs = {'agent_list': [agent_id],
-                'group_list': [group_id],
+                'group_list': [group_name],
                 'replace': force_single_group}
 
     dapi = DistributedAPI(f=agent.assign_agents_to_group,
@@ -970,15 +970,15 @@ async def post_new_agent(request, agent_name: str, pretty: bool = False,
     return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
 
 
-async def delete_multiple_agent_single_group(request, group_id: str, agents_list: str = None, pretty: bool = False,
+async def delete_multiple_agent_single_group(request, group_name: str, agents_list: str = None, pretty: bool = False,
                                              wait_for_complete: bool = False) -> web.Response:
     """Remove agents assignment from a specified group.
 
     Parameters
     ----------
     request : connexion.request
-    group_id : str
-        Group ID.
+    group_name : str
+        Group name.
     agents_list : str
         Array of agent's IDs.
     pretty: bool
@@ -994,7 +994,7 @@ async def delete_multiple_agent_single_group(request, group_id: str, agents_list
     if 'all' in agents_list:
         agents_list = None
     f_kwargs = {'agent_list': agents_list,
-                'group_list': [group_id]}
+                'group_list': [group_name]}
 
     dapi = DistributedAPI(f=agent.remove_agents_from_group,
                           f_kwargs=remove_nones_to_dict(f_kwargs),
@@ -1009,7 +1009,7 @@ async def delete_multiple_agent_single_group(request, group_id: str, agents_list
     return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
 
 
-async def put_multiple_agent_single_group(request, group_id: str, agents_list: str = None, pretty: bool = False,
+async def put_multiple_agent_single_group(request, group_name: str, agents_list: str = None, pretty: bool = False,
                                           wait_for_complete: bool = False,
                                           force_single_group: bool = False) -> web.Response:
     """Add multiple agents to a group.
@@ -1017,8 +1017,8 @@ async def put_multiple_agent_single_group(request, group_id: str, agents_list: s
     Parameters
     ----------
     request : connexion.request
-    group_id : str
-        Group ID.
+    group_name : str
+        Group name.
     agents_list : str
         List of agents IDs.
     pretty: bool
@@ -1034,7 +1034,7 @@ async def put_multiple_agent_single_group(request, group_id: str, agents_list: s
         API response.
     """
     f_kwargs = {'agent_list': agents_list,
-                'group_list': [group_id],
+                'group_list': [group_name],
                 'replace': force_single_group}
 
     dapi = DistributedAPI(f=agent.assign_agents_to_group,
@@ -1137,7 +1137,7 @@ async def get_list_group(request, pretty: bool = False, wait_for_complete: bool 
     return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
 
 
-async def get_agents_in_group(request, group_id: str, pretty: bool = False, wait_for_complete: bool = False,
+async def get_agents_in_group(request, group_name: str, pretty: bool = False, wait_for_complete: bool = False,
                               offset: int = 0, limit: int = DATABASE_LIMIT, select: str = None, sort: str = None,
                               search: str = None, status: str = None, q: str = None) -> web.Response:
     """Get the list of agents that belongs to the specified group.
@@ -1145,8 +1145,8 @@ async def get_agents_in_group(request, group_id: str, pretty: bool = False, wait
     Parameters
     ----------
     request : connexion.request
-    group_id : str
-        Group ID.
+    group_name : str
+        Group name.
     pretty: bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -1172,7 +1172,7 @@ async def get_agents_in_group(request, group_id: str, pretty: bool = False, wait
     web.Response
         API response.
     """
-    f_kwargs = {'group_list': [group_id],
+    f_kwargs = {'group_list': [group_name],
                 'offset': offset,
                 'limit': limit,
                 'sort': parse_api_param(sort, 'sort'),
@@ -1229,15 +1229,15 @@ async def post_group(request, pretty: bool = False, wait_for_complete: bool = Fa
     return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
 
 
-async def get_group_config(request, group_id: str, pretty: bool = False, wait_for_complete: bool = False,
+async def get_group_config(request, group_name: str, pretty: bool = False, wait_for_complete: bool = False,
                            offset: int = 0, limit: int = DATABASE_LIMIT) -> web.Response:
     """Get group configuration defined in the `agent.conf` file.
 
     Parameters
     ----------
     request : connexion.request
-    group_id : str
-        Group ID.
+    group_name : str
+        Group name.
     pretty: bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -1252,7 +1252,7 @@ async def get_group_config(request, group_id: str, pretty: bool = False, wait_fo
     web.Response
         API response.
     """
-    f_kwargs = {'group_list': [group_id],
+    f_kwargs = {'group_list': [group_name],
                 'offset': offset,
                 'limit': limit}
 
@@ -1269,7 +1269,7 @@ async def get_group_config(request, group_id: str, pretty: bool = False, wait_fo
     return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
 
 
-async def put_group_config(request, body: dict, group_id: str, pretty: bool = False,
+async def put_group_config(request, body: dict, group_name: str, pretty: bool = False,
                            wait_for_complete: bool = False) -> web.Response:
     """Update group configuration.
 
@@ -1282,8 +1282,8 @@ async def put_group_config(request, body: dict, group_id: str, pretty: bool = Fa
     body : dict
         Dictionary with the new group configuration.
         The body is obtained from the XML file and decoded in this function.
-    group_id : str
-        Group ID.
+    group_name : str
+        Group name.
     pretty: bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -1298,7 +1298,7 @@ async def put_group_config(request, body: dict, group_id: str, pretty: bool = Fa
     Body.validate_content_type(request, expected_content_type='application/xml')
     parsed_body = Body.decode_body(body, unicode_error=2006, attribute_error=2007)
 
-    f_kwargs = {'group_list': [group_id],
+    f_kwargs = {'group_list': [group_name],
                 'file_data': parsed_body}
 
     dapi = DistributedAPI(f=agent.upload_group_file,
@@ -1314,15 +1314,15 @@ async def put_group_config(request, body: dict, group_id: str, pretty: bool = Fa
     return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
 
 
-async def get_group_files(request, group_id: str, pretty: bool = False, wait_for_complete: bool = False,
+async def get_group_files(request, group_name: str, pretty: bool = False, wait_for_complete: bool = False,
                           offset: int = 0, limit: int = None, sort: str = None, search: str = None) -> web.Response:
     """Get the files placed under the group directory.
 
     Parameters
     ----------
     request : connexion.request
-    group_id : str
-        Group ID.
+    group_name : str
+        Group name.
     pretty: bool
         Show results in human-readable format.
     wait_for_complete : bool
@@ -1343,7 +1343,7 @@ async def get_group_files(request, group_id: str, pretty: bool = False, wait_for
         API response.
     """
     hash_ = request.query.get('hash', 'md5')  # Select algorithm to generate the returned checksums.
-    f_kwargs = {'group_list': [group_id],
+    f_kwargs = {'group_list': [group_name],
                 'offset': offset,
                 'limit': limit,
                 'sort_by': parse_api_param(sort, 'sort')['fields'] if sort is not None else ["filename"],
@@ -1365,15 +1365,15 @@ async def get_group_files(request, group_id: str, pretty: bool = False, wait_for
     return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
 
 
-async def get_group_file_json(request, group_id: str, file_name: str, pretty: bool = False,
+async def get_group_file_json(request, group_name: str, file_name: str, pretty: bool = False,
                               wait_for_complete: bool = False) -> web.Response:
     """Get the files placed under the group directory in JSON format.
 
     Parameters
     ----------
     request : connexion.request
-    group_id : str
-        Group ID.
+    group_name : str
+        Group name.
     file_name : str
         Name of the file to be obtained.
     pretty: bool
@@ -1386,7 +1386,7 @@ async def get_group_file_json(request, group_id: str, file_name: str, pretty: bo
     web.Response
         API response.
     """
-    f_kwargs = {'group_list': [group_id],
+    f_kwargs = {'group_list': [group_name],
                 'filename': file_name,
                 'type_conf': request.query.get('type', None),
                 'return_format': 'json'}
@@ -1404,15 +1404,15 @@ async def get_group_file_json(request, group_id: str, file_name: str, pretty: bo
     return web.json_response(data=data, status=200, dumps=prettify if pretty else dumps)
 
 
-async def get_group_file_xml(request, group_id: str, file_name: str, pretty: bool = False,
+async def get_group_file_xml(request, group_name: str, file_name: str, pretty: bool = False,
                              wait_for_complete: bool = False) -> ConnexionResponse:
     """Get the files placed under the group directory in XML format.
 
     Parameters
     ----------
     request : connexion.request
-    group_id : str
-        Group ID.
+    group_name : str
+        Group name.
     file_name : str
         Name of the file to be obtained.
     pretty: bool
@@ -1425,7 +1425,7 @@ async def get_group_file_xml(request, group_id: str, file_name: str, pretty: boo
     connexion.lifecycle.ConnexionResponse
         API response.
     """
-    f_kwargs = {'group_list': [group_id],
+    f_kwargs = {'group_list': [group_name],
                 'filename': file_name,
                 'type_conf': request.query.get('type', None),
                 'return_format': 'xml'}
@@ -1444,14 +1444,14 @@ async def get_group_file_xml(request, group_id: str, file_name: str, pretty: boo
     return response
 
 
-async def restart_agents_by_group(request, group_id: str, pretty: bool = False,
+async def restart_agents_by_group(request, group_name: str, pretty: bool = False,
                                   wait_for_complete: bool = False) -> web.Response:
     """Restart all agents from a group.
 
     Parameters
     ----------
     request : connexion.request
-    group_id : str
+    group_name : str
         Group name.
     pretty : bool, optional
         Show results in human-readable format. Default `False`
@@ -1463,7 +1463,7 @@ async def restart_agents_by_group(request, group_id: str, pretty: bool = False,
     web.Response
         API response.
     """
-    f_kwargs = {'group_list': [group_id], 'select': ['id'], 'limit': None}
+    f_kwargs = {'group_list': [group_name], 'select': ['id'], 'limit': None}
     dapi = DistributedAPI(f=agent.get_agents_in_group,
                           f_kwargs=f_kwargs,
                           request_type='local_master',

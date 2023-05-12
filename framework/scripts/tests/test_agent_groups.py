@@ -121,12 +121,12 @@ async def test_show_agents_with_group(print_mock):
                              failed_items={'a': 'b'})
 
     with patch('scripts.agent_groups.cluster_utils.forward_function', side_effect=forward_function) as forward_mock:
-        await agent_groups.show_agents_with_group(group_id='testing')
+        await agent_groups.show_agents_with_group(group_name='testing')
         forward_mock.has_calls(call(func=agent.get_agents_in_group, f_kwargs={'group_list': 'testing'}))
         print_mock.assert_has_calls([call("2 agent(s) in group 'testing':"),
                                      call('  ID: 1  Name: a.'), call('  ID: 2  Name: b.')])
         print_mock.reset_mock()
-        await agent_groups.show_agents_with_group(group_id='testing')
+        await agent_groups.show_agents_with_group(group_name='testing')
         print_mock.assert_has_calls([call("No agents found in group 'testing'.")])
 
 
@@ -148,11 +148,11 @@ async def test_show_group_files(print_mock):
                              failed_items={'a': 'b'})
 
     with patch('scripts.agent_groups.cluster_utils.forward_function', side_effect=forward_function) as forward_mock:
-        await agent_groups.show_group_files(group_id='testing')
+        await agent_groups.show_group_files(group_name='testing')
         forward_mock.has_calls(call(func=agent.get_group_files, f_kwargs={'group_list': 'testing'}))
         print_mock.assert_has_calls([call("2 files for 'testing' group:"), call('  a  [aa]'), call('  b  [bb]')])
         print_mock.reset_mock()
-        await agent_groups.show_group_files(group_id='testing')
+        await agent_groups.show_group_files(group_name='testing')
         print_mock.assert_has_calls([call("0 files for 'testing' group:"), call('  a  [aa]'), call('  b  [bb]')])
 
 
@@ -176,10 +176,10 @@ async def test_unset_group(print_mock):
     with patch('scripts.agent_groups.cluster_utils.forward_function', side_effect=forward_function) as forward_mock:
         with patch('scripts.agent_groups.get_stdin', return_value='y') as get_stdin_mock:
             agent_id = '99'
-            group_id = 'testing'
-            await agent_groups.unset_group(agent_id=agent_id, group_id=group_id)
+            group_name = 'testing'
+            await agent_groups.unset_group(agent_id=agent_id, group_name=group_name)
             forward_mock.has_calls(call(func=agent.remove_agent_from_groups,
-                                        f_kwargs={'agent_list': [agent_id], 'group_list': [group_id]}))
+                                        f_kwargs={'agent_list': [agent_id], 'group_list': [group_name]}))
             get_stdin_mock.assert_has_calls([call("Do you want to delete the group 'testing' of agent '99'? [y/N]: ")])
             print_mock.assert_has_calls([call("Agent '99' removed from testing.")])
             print_mock.reset_mock()
@@ -213,20 +213,20 @@ async def test_remove_group(print_mock):
 
     with patch('scripts.agent_groups.cluster_utils.forward_function', side_effect=forward_function) as forward_mock:
         with patch('scripts.agent_groups.get_stdin', return_value='y') as get_stdin_mock:
-            await agent_groups.remove_group(group_id='testing')
+            await agent_groups.remove_group(group_name='testing')
             forward_mock.has_calls(call(func=agent.delete_groups, f_kwargs={'group_list': ['testing']}))
             get_stdin_mock.assert_has_calls([call("Do you want to remove the 'testing' group? [y/N]: ")])
             print_mock.assert_has_calls([call('Group testing removed.\nAffected agents: a, b.')])
             print_mock.reset_mock()
             get_stdin_mock.reset_mock()
 
-            await agent_groups.remove_group(group_id='testing', quiet=True)
+            await agent_groups.remove_group(group_name='testing', quiet=True)
             print_mock.assert_has_calls([call('a')])
             print_mock.reset_mock()
             get_stdin_mock.reset_mock()
 
         with patch('scripts.agent_groups.get_stdin', return_value='n'):
-            await agent_groups.remove_group(group_id='testing')
+            await agent_groups.remove_group(group_name='testing')
             print_mock.assert_has_calls([call('Cancelled.')])
 
 
@@ -248,7 +248,7 @@ async def test_set_group(print_mock):
 
     with patch('scripts.agent_groups.cluster_utils.forward_function', side_effect=forward_function) as forward_mock:
         with patch('scripts.agent_groups.get_stdin', return_value='y') as get_stdin_mock:
-            await agent_groups.set_group(agent_id=1, group_id='testing')
+            await agent_groups.set_group(agent_id=1, group_name='testing')
             forward_mock.has_calls(call(func=agent.assign_agents_to_group,
                                    f_kwargs={'group_list': ['testing'], 'agent_list': [1], 'replace': False}))
             get_stdin_mock.assert_has_calls(
@@ -257,13 +257,13 @@ async def test_set_group(print_mock):
             print_mock.reset_mock()
             get_stdin_mock.reset_mock()
 
-            await agent_groups.set_group(agent_id=2, group_id='testing', quiet=True)
+            await agent_groups.set_group(agent_id=2, group_name='testing', quiet=True)
             print_mock.assert_has_calls([call('a')])
             print_mock.reset_mock()
             get_stdin_mock.reset_mock()
 
         with patch('scripts.agent_groups.get_stdin', return_value='n'):
-            await agent_groups.set_group(agent_id=3, group_id='testing')
+            await agent_groups.set_group(agent_id=3, group_name='testing')
             print_mock.assert_has_calls([call('Cancelled.')])
 
 
@@ -286,16 +286,16 @@ async def test_create_group(print_mock):
 
     with patch('scripts.agent_groups.cluster_utils.forward_function', side_effect=forward_function) as forward_mock:
         with patch('scripts.agent_groups.get_stdin', return_value='y') as get_stdin_mock:
-            group_id = 'testing'
-            await agent_groups.create_group(group_id=group_id)
-            forward_mock.has_calls(call(func=agent.create_group, f_kwargs={'group_id': group_id}))
-            get_stdin_mock.assert_has_calls([call(f"Do you want to create the group '{group_id}'? [y/N]: ")])
+            group_name = 'testing'
+            await agent_groups.create_group(group_name=group_name)
+            forward_mock.has_calls(call(func=agent.create_group, f_kwargs={'group_name': group_name}))
+            get_stdin_mock.assert_has_calls([call(f"Do you want to create the group '{group_name}'? [y/N]: ")])
             print_mock.assert_has_calls([call('dikt_testing')])
             print_mock.reset_mock()
             get_stdin_mock.reset_mock()
 
         with patch('scripts.agent_groups.get_stdin', return_value='n'):
-            await agent_groups.create_group(group_id='testing')
+            await agent_groups.create_group(group_name='testing')
             print_mock.assert_has_calls([call('Cancelled.')])
 
 
@@ -304,20 +304,20 @@ async def test_create_group(print_mock):
 def test_usage(basename_mock, print_mock):
     """Test if the usage is being correctly printed."""
     msg = """
-    {0} [ -l [ -g group_id ] | -c -g group_id | -a (-i agent_id -g group_id | -g group_id) [-q] [-f] | -s -i agent_id | -S -i agent_id | -r (-g group_id | -i agent_id) [-q] ]
+    {0} [ -l [ -g group_name ] | -c -g group_name | -a (-i agent_id -g group_name | -g group_name) [-q] [-f] | -s -i agent_id | -S -i agent_id | -r (-g group_name | -i agent_id) [-q] ]
 
     Usage:
     \t-l                                    # List all groups
-    \t-l -g group_id                        # List agents in group
-    \t-c -g group_id                        # List configuration files in group
+    \t-l -g group_name                        # List agents in group
+    \t-c -g group_name                        # List configuration files in group
     \t
-    \t-a -i agent_id -g group_id [-q] [-f]  # Add group to agent
-    \t-r -i agent_id [-q] [-g group_id]     # Remove all groups from agent [or single group]
+    \t-a -i agent_id -g group_name [-q] [-f]  # Add group to agent
+    \t-r -i agent_id [-q] [-g group_name]     # Remove all groups from agent [or single group]
     \t-s -i agent_id                        # Show group of agent
     \t-S -i agent_id                        # Show sync status of agent
     \t
-    \t-a -g group_id [-q]                   # Create group
-    \t-r -g group_id [-q]                   # Remove group
+    \t-a -g group_name [-q]                   # Create group
+    \t-r -g group_name [-q]                   # Remove group
 
 
     Params:
@@ -375,7 +375,7 @@ def test_get_script_arguments(argument_parser_mock, invalid_option_mock):
              call('-S', '--show-sync', action='store_true', dest='show_sync', help='Show sync status of agent.'),
              call('-r', '--remove', action='store_true', dest='remove', help='Remove group or agent from group.'),
              call('-i', '--agent-id', type=str, dest='agent_id', help='Specify the agent ID.'),
-             call('-g', '--group-id', type=str, dest='group_id', help='Specify group ID.'),
+             call('-g', '--group-name', type=str, dest='group_name', help='Specify group name.'),
              call('-q', '--quiet', action='store_true', dest='quiet', help='Silent mode (no confirmation).'),
              call('-d', '--debug', action='store_true', dest='debug', help='Debug mode.'),
              call('-u', '--usage', action='store_true', dest='usage', help='Show usage.')])
@@ -405,7 +405,7 @@ async def test_main(print_mock, usage_mock, show_groups_mock, show_agents_with_g
     """Test the main function."""
     class Arguments:
         def __init__(self, list=None, list_files=None, add=None, show_group=None, show_sync=None, force=False,
-                     remove=None, agent_id=None, group_id=None, quiet=False, debug=False, usage=None):
+                     remove=None, agent_id=None, group_name=None, quiet=False, debug=False, usage=None):
             self.list = list
             self.list_files = list_files
             self.add = add
@@ -414,7 +414,7 @@ async def test_main(print_mock, usage_mock, show_groups_mock, show_agents_with_g
             self.show_sync = show_sync
             self.remove = remove
             self.agent_id = agent_id
-            self.group_id = group_id
+            self.group_name = group_name
             self.quiet = quiet
             self.debug = debug
             self.usage = usage
@@ -438,9 +438,9 @@ async def test_main(print_mock, usage_mock, show_groups_mock, show_agents_with_g
     show_groups_mock.assert_called_once()
 
     # -l -g
-    agent_groups.args.group_id = 'group'
+    agent_groups.args.group_name = 'group'
     await agent_groups.main()
-    show_agents_with_group_mock.assert_called_once_with(agent_groups.args.group_id)
+    show_agents_with_group_mock.assert_called_once_with(agent_groups.args.group_name)
 
     # -c --list-files
     agent_groups.args = Arguments(list_files=True)
@@ -449,35 +449,35 @@ async def test_main(print_mock, usage_mock, show_groups_mock, show_agents_with_g
     invalid_option_mock.reset_mock()
 
     # -c -g
-    agent_groups.args = Arguments(list_files=True, group_id='group')
+    agent_groups.args = Arguments(list_files=True, group_name='group')
     await agent_groups.main()
     show_group_files_mock.assert_called_once_with('group')
 
-    # -a -i agent_id -g group_id
-    agent_groups.args = Arguments(add=True, agent_id='001', group_id='group1')
+    # -a -i agent_id -g group_name
+    agent_groups.args = Arguments(add=True, agent_id='001', group_name='group1')
     await agent_groups.main()
     set_group_mock.assert_called_once_with('001', 'group1', False, False)
     set_group_mock.reset_mock()
 
-    # -a -i agent_id -g group_id -f
-    agent_groups.args = Arguments(add=True, agent_id='001', group_id='group1', force=True)
+    # -a -i agent_id -g group_name -f
+    agent_groups.args = Arguments(add=True, agent_id='001', group_name='group1', force=True)
     await agent_groups.main()
     set_group_mock.assert_called_once_with('001', 'group1', False, True)
     set_group_mock.reset_mock()
 
-    # -a -i agent_id -g group_id -f -q
-    agent_groups.args = Arguments(add=True, agent_id='001', group_id='group1', force=True, quiet=True)
+    # -a -i agent_id -g group_name -f -q
+    agent_groups.args = Arguments(add=True, agent_id='001', group_name='group1', force=True, quiet=True)
     await agent_groups.main()
     set_group_mock.assert_called_once_with('001', 'group1', True, True)
 
-    # -a -g group_id
-    agent_groups.args = Arguments(add=True, group_id='group1')
+    # -a -g group_name
+    agent_groups.args = Arguments(add=True, group_name='group1')
     await agent_groups.main()
     create_group_mock.assert_called_once_with('group1', False)
     create_group_mock.reset_mock()
 
-    # -a -g group_id -q
-    agent_groups.args = Arguments(add=True, group_id='group1', quiet=True)
+    # -a -g group_name -q
+    agent_groups.args = Arguments(add=True, group_name='group1', quiet=True)
     await agent_groups.main()
     create_group_mock.assert_called_once_with('group1', True)
 
@@ -515,8 +515,8 @@ async def test_main(print_mock, usage_mock, show_groups_mock, show_agents_with_g
     unset_group_mock.assert_called_once_with('004', None, False)
     unset_group_mock.reset_mock()
 
-    # -r -i agent_id -g group_id
-    agent_groups.args = Arguments(remove=True, agent_id='004', group_id='group1')
+    # -r -i agent_id -g group_name
+    agent_groups.args = Arguments(remove=True, agent_id='004', group_name='group1')
     await agent_groups.main()
     unset_group_mock.assert_called_once_with('004', 'group1', False)
     unset_group_mock.reset_mock()
@@ -526,14 +526,14 @@ async def test_main(print_mock, usage_mock, show_groups_mock, show_agents_with_g
     await agent_groups.main()
     unset_group_mock.assert_called_once_with('004', None, True)
 
-    # -r -g group_id
-    agent_groups.args = Arguments(remove=True, group_id='group2')
+    # -r -g group_name
+    agent_groups.args = Arguments(remove=True, group_name='group2')
     await agent_groups.main()
     remove_group_mock.assert_called_once_with('group2', False)
     remove_group_mock.reset_mock()
 
-    # -r -g group_id -q
-    agent_groups.args = Arguments(remove=True, group_id='group2', quiet=True)
+    # -r -g group_name -q
+    agent_groups.args = Arguments(remove=True, group_name='group2', quiet=True)
     await agent_groups.main()
     remove_group_mock.assert_called_once_with('group2', True)
 

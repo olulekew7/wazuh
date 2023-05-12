@@ -104,39 +104,39 @@ async def show_synced_agent(agent_id: str):
     print(msg)
 
 
-async def show_agents_with_group(group_id: str):
+async def show_agents_with_group(group_name: str):
     """Print the ID and name of the agents belonging to a specified group.
 
     Parameters
     ----------
-    group_id : str
-        ID of the group.
+    group_name : str
+        Name of the group.
     """
     result = await cluster_utils.forward_function(func=agent.get_agents_in_group,
-                                                  f_kwargs={'group_list': [group_id], 'select': ['name'],
+                                                  f_kwargs={'group_list': [group_name], 'select': ['name'],
                                                             'limit': None})
     check_if_exception(result)
 
     if result.total_affected_items == 0:
-        print(f"No agents found in group '{group_id}'.")
+        print(f"No agents found in group '{group_name}'.")
     else:
-        print(f"{result.total_affected_items} agent(s) in group '{group_id}':")
+        print(f"{result.total_affected_items} agent(s) in group '{group_name}':")
         for a in result.affected_items:
             print(f"  ID: {a['id']}  Name: {a['name']}.")
 
 
-async def show_group_files(group_id: str):
+async def show_group_files(group_name: str):
     """Print a specified group's files names and its respective hashes.
 
     Parameters
     ----------
-    group_id : str
-        ID of the group we want to check the configuration files from.
+    group_name : str
+        Name of the group we want to check the configuration files from.
     """
-    result = await cluster_utils.forward_function(func=agent.get_group_files, f_kwargs={'group_list': [group_id]})
+    result = await cluster_utils.forward_function(func=agent.get_group_files, f_kwargs={'group_list': [group_name]})
     check_if_exception(result)
 
-    print("{0} files for '{1}' group:".format(result.total_affected_items, group_id))
+    print("{0} files for '{1}' group:".format(result.total_affected_items, group_name))
 
     longest_name = 0
     for item in result.affected_items:
@@ -148,15 +148,15 @@ async def show_group_files(group_id: str):
         print("  {0}{1}[{2}]".format(item['filename'], spaces * ' ', item['hash']))
 
 
-async def unset_group(agent_id: str, group_id: str = None, quiet: bool = False):
+async def unset_group(agent_id: str, group_name: str = None, quiet: bool = False):
     """Remove a specified agent assignation with a single group or with all its groups.
 
     Parameters
     ----------
     agent_id : str
         Agent ID.
-    group_id : str
-        ID of the group for which the agent will no longer be assigned. If no group_id is provided, all the group
+    group_name : str
+        Name of the group for which the agent will no longer be assigned. If no group_name is provided, all the group
         assignations will be removed.
     quiet : bool
         Show confirmation message waiting for a stdin answer.
@@ -164,17 +164,17 @@ async def unset_group(agent_id: str, group_id: str = None, quiet: bool = False):
     if quiet:
         ans = 'y'
 
-    elif group_id:
-        ans = get_stdin(f"Do you want to delete the group '{group_id}' of agent '{agent_id}'? [y/N]: ")
+    elif group_name:
+        ans = get_stdin(f"Do you want to delete the group '{group_name}' of agent '{agent_id}'? [y/N]: ")
     else:
         ans = get_stdin(f"Do you want to delete all groups of agent '{agent_id}'? [y/N]: ")
     if ans.lower() == 'y':
         result = await cluster_utils.forward_function(func=agent.remove_agent_from_groups,
-                                                      f_kwargs={'agent_list': [agent_id], 'group_list': [group_id]})
+                                                      f_kwargs={'agent_list': [agent_id], 'group_list': [group_name]})
         check_if_exception(result)
 
         if result.total_affected_items != 0:
-            msg = f"Agent '{agent_id}' removed from {group_id}."
+            msg = f"Agent '{agent_id}' removed from {group_name}."
         else:
             msg = list(result.failed_items.keys())[0]
     else:
@@ -183,28 +183,28 @@ async def unset_group(agent_id: str, group_id: str = None, quiet: bool = False):
     print(msg)
 
 
-async def remove_group(group_id: str, quiet: bool = False):
+async def remove_group(group_name: str, quiet: bool = False):
     """Remove a specified group.
 
     Parameters
     ----------
-    group_id : str
-        ID of the group to be removed.
+    group_name : str
+        Name of the group to be removed.
     quiet : bool
         Show confirmation message waiting for a stdin answer.
     """
-    ans = 'y' if quiet else get_stdin(f"Do you want to remove the '{group_id}' group? [y/N]: ")
+    ans = 'y' if quiet else get_stdin(f"Do you want to remove the '{group_name}' group? [y/N]: ")
 
     msg = ''
     if ans.lower() == 'y':
-        result = await cluster_utils.forward_function(func=agent.delete_groups, f_kwargs={'group_list': [group_id]})
+        result = await cluster_utils.forward_function(func=agent.delete_groups, f_kwargs={'group_list': [group_name]})
         check_if_exception(result)
 
         if result.total_affected_items == 0:
             msg = list(result.failed_items.keys())[0]
         else:
             affected_agents = next(iter(result.affected_items[0].values()))
-            msg = f'Group {group_id} removed.'
+            msg = f'Group {group_name} removed.'
             if len(affected_agents) == 0:
                 msg += "\nNo affected agents."
             else:
@@ -215,15 +215,15 @@ async def remove_group(group_id: str, quiet: bool = False):
     print(msg)
 
 
-async def set_group(agent_id: str, group_id: str, quiet: bool = False, replace: bool = False):
+async def set_group(agent_id: str, group_name: str, quiet: bool = False, replace: bool = False):
     """Assign a specified agent to a specified group.
 
     Parameters
     ----------
     agent_id : str
         Agent ID.
-    group_id : str
-        Group ID.
+    group_name : str
+        Group name.
     quiet : bool
         Show confirmation message waiting for a stdin answer.
     replace : bool
@@ -231,16 +231,16 @@ async def set_group(agent_id: str, group_id: str, quiet: bool = False, replace: 
     """
     agent_id = f"{int(agent_id)}".zfill(3)
 
-    ans = 'y' if quiet else get_stdin(f"Do you want to add the group '{group_id}' to the agent '{agent_id}'? [y/N]: ")
+    ans = 'y' if quiet else get_stdin(f"Do you want to add the group '{group_name}' to the agent '{agent_id}'? [y/N]: ")
 
     if ans.lower() == 'y':
         result = await cluster_utils.forward_function(func=agent.assign_agents_to_group,
-                                                      f_kwargs={'group_list': [group_id], 'agent_list': [agent_id],
+                                                      f_kwargs={'group_list': [group_name], 'agent_list': [agent_id],
                                                                 'replace': replace})
         check_if_exception(result)
 
         if result.total_affected_items != 0:
-            msg = f"Group '{group_id}' added to agent '{agent_id}'."
+            msg = f"Group '{group_name}' added to agent '{agent_id}'."
         else:
             msg = list(result.failed_items.keys())[0]
 
@@ -250,20 +250,20 @@ async def set_group(agent_id: str, group_id: str, quiet: bool = False, replace: 
     print(msg)
 
 
-async def create_group(group_id: str, quiet: bool = False):
+async def create_group(group_name: str, quiet: bool = False):
     """Create a group given its ID.
 
     Parameters
     ----------
-    group_id : str
-        ID of the group to be created
+    group_name : str
+        Name of the group to be created
     quiet : bool
         Show confirmation message waiting for a stdin answer.
     """
-    ans = 'y' if quiet else get_stdin(f"Do you want to create the group '{group_id}'? [y/N]: ")
+    ans = 'y' if quiet else get_stdin(f"Do you want to create the group '{group_name}'? [y/N]: ")
 
     if ans.lower() == 'y':
-        result = await cluster_utils.forward_function(func=agent.create_group, f_kwargs={'group_id': group_id})
+        result = await cluster_utils.forward_function(func=agent.create_group, f_kwargs={'group_name': group_name})
         check_if_exception(result)
 
         msg = result.dikt['message']
@@ -292,20 +292,20 @@ def check_if_exception(result: object):
 
 def usage():
     msg = """
-    {0} [ -l [ -g group_id ] | -c -g group_id | -a (-i agent_id -g group_id | -g group_id) [-q] [-f] | -s -i agent_id | -S -i agent_id | -r (-g group_id | -i agent_id) [-q] ]
+    {0} [ -l [ -g group_name ] | -c -g group_name | -a (-i agent_id -g group_name | -g group_name) [-q] [-f] | -s -i agent_id | -S -i agent_id | -r (-g group_name | -i agent_id) [-q] ]
 
     Usage:
     \t-l                                    # List all groups
-    \t-l -g group_id                        # List agents in group
-    \t-c -g group_id                        # List configuration files in group
+    \t-l -g group_name                        # List agents in group
+    \t-c -g group_name                        # List configuration files in group
     \t
-    \t-a -i agent_id -g group_id [-q] [-f]  # Add group to agent
-    \t-r -i agent_id [-q] [-g group_id]     # Remove all groups from agent [or single group]
+    \t-a -i agent_id -g group_name [-q] [-f]  # Add group to agent
+    \t-r -i agent_id [-q] [-g group_name]     # Remove all groups from agent [or single group]
     \t-s -i agent_id                        # Show group of agent
     \t-S -i agent_id                        # Show sync status of agent
     \t
-    \t-a -g group_id [-q]                   # Create group
-    \t-r -g group_id [-q]                   # Remove group
+    \t-a -g group_name [-q]                   # Create group
+    \t-r -g group_name [-q]                   # Remove group
 
 
     Params:
@@ -363,7 +363,7 @@ def get_script_arguments() -> argparse.Namespace:
     parser.add_argument("-r", "--remove", action='store_true', dest="remove",
                         help="Remove group or agent from group.")
     parser.add_argument("-i", "--agent-id", type=str, dest="agent_id", help="Specify the agent ID.")
-    parser.add_argument("-g", "--group-id", type=str, dest="group_id", help="Specify group ID.")
+    parser.add_argument("-g", "--group-name", type=str, dest="group_name", help="Specify group name.")
     parser.add_argument("-q", "--quiet", action='store_true', dest="quiet", help="Silent mode (no confirmation).")
     parser.add_argument("-d", "--debug", action='store_true', dest="debug", help="Debug mode.")
     parser.add_argument("-u", "--usage", action='store_true', dest="usage", help="Show usage.")
@@ -379,21 +379,21 @@ async def main():
     # Capture Cntrl + C
     signal(SIGINT, signal_handler)
 
-    # ./agent_groups.py -l [ -g group_id ]
+    # ./agent_groups.py -l [ -g group_name ]
     if args.list:
-        if args.group_id:
-            await show_agents_with_group(args.group_id)
+        if args.group_name:
+            await show_agents_with_group(args.group_name)
         else:
             await show_groups()
-    # -c -g group_id
+    # -c -g group_name
     elif args.list_files:
-        await show_group_files(args.group_id) if args.group_id else invalid_option("Missing group.")
-    # -a (-i agent_id -g groupd_id | -g group_id) [-q] [-e]
+        await show_group_files(args.group_name) if args.group_name else invalid_option("Missing group.")
+    # -a (-i agent_id -g groupd_id | -g group_name) [-q] [-e]
     elif args.add:
-        if args.agent_id and args.group_id:
-            await set_group(args.agent_id, args.group_id, args.quiet, args.force)
-        elif args.group_id:
-            await create_group(args.group_id, args.quiet)
+        if args.agent_id and args.group_name:
+            await set_group(args.agent_id, args.group_name, args.quiet, args.force)
+        elif args.group_name:
+            await create_group(args.group_name, args.quiet)
         else:
             invalid_option("Missing agent ID or group.")
     # -s -i agent_id
@@ -402,12 +402,12 @@ async def main():
     # -S -i agent_id
     elif args.show_sync:
         await show_synced_agent(args.agent_id) if args.agent_id else invalid_option("Missing agent ID.")
-    # -r (-g group_id | -i agent_id) [-q]
+    # -r (-g group_name | -i agent_id) [-q]
     elif args.remove:
         if args.agent_id:
-            await unset_group(args.agent_id, args.group_id, args.quiet)
-        elif args.group_id:
-            await remove_group(args.group_id, args.quiet)
+            await unset_group(args.agent_id, args.group_name, args.quiet)
+        elif args.group_name:
+            await remove_group(args.group_name, args.quiet)
         else:
             invalid_option("Missing agent ID or group.")
     elif args.usage:
