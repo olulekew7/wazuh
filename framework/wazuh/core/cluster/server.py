@@ -17,14 +17,27 @@ from uuid import uuid4
 import uvloop
 
 from wazuh.core import common, exception, utils
-from wazuh.core.cluster import common as c_common
+from wazuh.core.cluster.common import asyncio_exception_handler, Handler
 from wazuh.core.cluster.utils import ClusterFilter, context_tag
+from wazuh.core.cluster.common import Handler
 
 
-class AbstractServerHandler(c_common.Handler):
+class AbstractServerHandler(Handler):
     """
     Define abstract server protocol. Handle communication with a single client.
     """
+
+    def _create_cmd_handlers(self):
+        """
+            Add command handlers to _cmd_handler dictionary
+        """
+        super()._create_cmd_handlers()
+        self._cmd_handler.update(
+            {
+                b'echo-c': lambda _, __: None,
+                b'hello': lambda _, __: None,
+            }
+        )
 
     def __init__(self, server, loop: asyncio.AbstractEventLoop, fernet_key: str,
                  cluster_items: Dict, logger: logging.Logger = None, tag: str = "Client"):
@@ -81,30 +94,6 @@ class AbstractServerHandler(c_common.Handler):
         self.ip = peername[0]
         self.transport = transport
 
-    def process_request(self, command: bytes, data: bytes) -> Tuple[bytes, bytes]:
-        """Define commands for servers.
-
-        Parameters
-        ----------
-        command : bytes
-            Received command from client.
-        data : bytes
-            Received payload from client.
-
-        Returns
-        -------
-        bytes
-            Result.
-        bytes
-            Response message.
-        """
-        if command == b"echo-c":
-            return self.echo_master(data)
-        elif command == b'hello':
-            return self.hello(data)
-        else:
-            return super().process_request(command, data)
-
     def echo_master(self, data: bytes) -> Tuple[bytes, bytes]:
         """Update last_keepalive.
 
@@ -141,14 +130,16 @@ class AbstractServerHandler(c_common.Handler):
         self.name = data.decode()
         if self.name in self.server.clients:
             self.name = ''
-            raise exception.WazuhClusterError(3028, extra_message=data.decode())
+            raise exception.WazuhClusterError(
+                3028, extra_message=data.decode())
         elif self.name == self.server.configuration['node_name']:
             raise exception.WazuhClusterError(3029)
         else:
             self.server.clients[self.name] = self
             self.tag = f'{self.tag} {self.name}'
             context_tag.set(self.tag)
-            self.handler_tasks.append(self.loop.create_task(self.broadcast_reader()))
+            self.handler_tasks.append(
+                self.loop.create_task(self.broadcast_reader()))
             return b'ok', f'Client {self.name} added'.encode()
 
     def process_response(self, command: bytes, payload: bytes) -> bytes:
@@ -195,7 +186,8 @@ class AbstractServerHandler(c_common.Handler):
             self.logger.error(f"Error during handshake with incoming connection: {exc}. \n"
                               f"{''.join(traceback.format_tb(exc.__traceback__))}", exc_info=False)
         else:
-            self.logger.error("Error during handshake with incoming connection.", exc_info=False)
+            self.logger.error(
+                "Error during handshake with incoming connection.", exc_info=False)
 
     def add_request(self, broadcast_id, f, *args, **kwargs):
         """Add a request to the queue to execute a function in this server handler.
@@ -212,7 +204,8 @@ class AbstractServerHandler(c_common.Handler):
             Keyword arguments to be passed to function `f`.
         """
         self.broadcast_queue.put_nowait(
-            {'broadcast_id': broadcast_id, 'func': functools.partial(f, self, *args, **kwargs)}
+            {'broadcast_id': broadcast_id,
+                'func': functools.partial(f, self, *args, **kwargs)}
         )
 
     async def broadcast_reader(self):
@@ -233,11 +226,13 @@ class AbstractServerHandler(c_common.Handler):
                 else:
                     result = q_item['func']()
             except Exception as e:
-                self.logger.error(f"Error while broadcasting function. ID: {q_item['broadcast_id']}. Error: {e}.")
+                self.logger.error(
+                    f"Error while broadcasting function. ID: {q_item['broadcast_id']}. Error: {e}.")
                 result = e
 
             with contextlib.suppress(KeyError):
-                self.server.broadcast_results[q_item['broadcast_id']][self.name] = result
+                self.server.broadcast_results[q_item['broadcast_id']
+                                              ][self.name] = result
 
 
 class AbstractServer:
@@ -304,9 +299,11 @@ class AbstractServer:
         for name, client in self.clients.items():
             try:
                 client.add_request(None, f, *args, **kwargs)
-                self.logger.debug2(f'Added broadcast request to execute "{f.__name__}" in {name}.')
+                self.logger.debug2(
+                    f'Added broadcast request to execute "{f.__name__}" in {name}.')
             except Exception as e:
-                self.logger.error(f'Error while adding broadcast request in {name}: {e}', exc_info=False)
+                self.logger.error(
+                    f'Error while adding broadcast request in {name}: {e}', exc_info=False)
 
     def broadcast_add(self, f, *args, **kwargs):
         """Add a function to the broadcast_queue of each server handler and obtain an identifier.
@@ -340,10 +337,12 @@ class AbstractServer:
                 try:
                     self.broadcast_results[broadcast_id][name] = AbstractServer.NO_RESULT
                     client.add_request(broadcast_id, f, *args, **kwargs)
-                    self.logger.debug2(f'Added broadcast request to execute "{f.__name__}" in {name}.')
+                    self.logger.debug2(
+                        f'Added broadcast request to execute "{f.__name__}" in {name}.')
                 except Exception as e:
                     self.broadcast_results[broadcast_id].pop(name, None)
-                    self.logger.error(f'Error while adding broadcast request in {name}: {e}', exc_info=False)
+                    self.logger.error(
+                        f'Error while adding broadcast request in {name}: {e}', exc_info=False)
 
             if not self.broadcast_results[broadcast_id]:
                 self.broadcast_results.pop(broadcast_id, None)
@@ -447,7 +446,7 @@ class AbstractServer:
                 Whether the node must be added to the result or not.
             """
             return (filter_node is None or node_info['name'] in filter_node) and (
-                        filter_type == 'all' or node_info['type'] == filter_type)
+                filter_type == 'all' or node_info['type'] == filter_type)
 
         default_fields = self.to_dict()['info'].keys()
         if select is None:
@@ -461,7 +460,8 @@ class AbstractServer:
             raise exception.WazuhError(1728)
 
         if filter_node is not None:
-            filter_node = set(filter_node) if isinstance(filter_node, list) else {filter_node}
+            filter_node = set(filter_node) if isinstance(
+                filter_node, list) else {filter_node}
             if not filter_node.issubset(set(itertools.chain(self.clients.keys(), [self.configuration['node_name']]))):
                 raise exception.WazuhResourceNotFound(1730)
 
@@ -472,7 +472,8 @@ class AbstractServer:
                                    search_text=search['value'] if search is not None else None,
                                    complementary_search=search['negation'] if search is not None else False,
                                    sort_by=sort['fields'] if sort is not None else None,
-                                   sort_ascending=False if sort is not None and sort['order'] == 'desc' else True,
+                                   sort_ascending=False if sort is not None and sort[
+                                       'order'] == 'desc' else True,
                                    allowed_sort_fields=default_fields,
                                    offset=offset,
                                    limit=limit)
@@ -505,7 +506,8 @@ class AbstractServer:
                     before = perf_counter()
                     response = await client.send_request(b'echo', b'a' * self.performance)
                     after = perf_counter()
-                    self.logger.info(f"Received size: {len(response)} // Time: {after - before}")
+                    self.logger.info(
+                        f"Received size: {len(response)} // Time: {after - before}")
                 except Exception as e:
                     self.logger.error(f"Error during performance test: {e}")
             await asyncio.sleep(3)
@@ -522,7 +524,8 @@ class AbstractServer:
                         self.logger.error(f"Error during concurrency test ({i+1}/{self.concurrency}, {client_name}): "
                                           f"{e}")
             after = perf_counter()
-            self.logger.info(f"Time sending {self.concurrency} messages: {after - before}")
+            self.logger.info(
+                f"Time sending {self.concurrency} messages: {after - before}")
             await asyncio.sleep(10)
 
     async def start(self):
@@ -530,10 +533,11 @@ class AbstractServer:
         # Get a reference to the event loop as we plan to use low-level APIs.
         context_tag.set(self.tag)
         asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
-        self.loop.set_exception_handler(c_common.asyncio_exception_handler)
+        self.loop.set_exception_handler(asyncio_exception_handler)
 
         if self.enable_ssl:
-            ssl_context = ssl.create_default_context(purpose=ssl.Purpose.CLIENT_AUTH)
+            ssl_context = ssl.create_default_context(
+                purpose=ssl.Purpose.CLIENT_AUTH)
             ssl_context.load_cert_chain(certfile=os.path.join(common.WAZUH_PATH, 'etc', 'sslmanager.cert'),
                                         keyfile=os.path.join(common.WAZUH_PATH, 'etc', 'sslmanager.key'))
         else:
