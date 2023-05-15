@@ -300,15 +300,14 @@ def test_ac_process_response():
 def test_ac_process_request():
     """Check the command available in clients depending on the input command."""
 
-    # Test the fist condition
+    # Test command b"echo-m"
     with patch('wazuh.core.cluster.client.AbstractClient.echo_client', return_value=b'ok') as echo_mock:
         assert (abstract_client.process_request(command=b"echo-m", data=b"data") == b'ok')
         echo_mock.assert_called_once_with(b'data')
 
-    # Test the second condition
-    with patch('wazuh.core.cluster.common.Handler.process_request', return_value=b'ok') as pr_mock:
-        assert abstract_client.process_request(command=b'ok', data=b"data") == b'ok'
-        pr_mock.assert_called_once_with(b'ok', b"data")
+    # Test command not found
+    command = b'not_found_command'
+    assert abstract_client.process_request(command=command, data=b"data") == (b'err', f"unknown command '{command}'".encode())
 
 
 def test_ac_echo_client():
