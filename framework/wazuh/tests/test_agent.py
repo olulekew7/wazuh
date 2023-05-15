@@ -414,7 +414,6 @@ def test_agent_delete_agents(socket_mock, send_mock, mock_remove, agent_list, fi
     """
     if not isinstance(error_code, WazuhException):
         result = delete_agents(agent_list, filters=filters, q=q)
-        print("result", result.affected_items)
 
         assert result.affected_items == sorted(expected_items), \
             f'"Affected_items" does not match. Should be "{result.affected_items}".'
