@@ -1058,17 +1058,12 @@ class Agent:
         else:
             mode = 'append' if not override else 'override'
 
-        # TODO: create insert-group query
-        group_command = f'global insert-group {{"mode":"{mode}","sync_status":"syncreq","data":[{{"name":' \
-            f'{group_name}}}]}}'
-        # TODO: create set-agent-group-belong
-        belongs_command = f'global set-agent-group-belong {{"mode":"{mode}","sync_status":"syncreq","data":[{{' \
+        command = f'global insert-agent-belong {{"mode":"{mode}","sync_status":"syncreq","data":[{{' \
             f'"id_agent":{agent_id},"name_group":{group_name}}}]}}'
 
         wdb = WazuhDBConnection()
         try:
-            wdb.send(group_command, raw=True)
-            wdb.send(belongs_command, raw=True)
+            wdb.send(command, raw=True)
         finally:
             wdb.close()
 

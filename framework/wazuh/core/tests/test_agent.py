@@ -1116,7 +1116,7 @@ def test_agent_set_agent_group_relationship(socket_connect_mock, send_mock, remo
     """
     agent_id = '001'
     group_name = 'default'
-    wdb_command = r'global set-agent-group-belong {\"mode\":\"(.+)\",\"sync_status\":\"syncreq\",\"data\":\[{' \
+    wdb_command = r'global insert-agent-belong {\"mode\":\"(.+)\",\"sync_status\":\"syncreq\",\"data\":\[{' \
         r'\"id_agent\":(.+),\"name_group\":(.+)}]}'
 
     # Default relationship -> add an agent to a group
