@@ -10,7 +10,7 @@ from typing import Tuple, Dict, List
 
 import uvloop
 
-from wazuh.core.cluster import common
+from wazuh.core.cluster.common import Handler, asyncio_exception_handler
 from wazuh.core.cluster.utils import context_tag
 
 
@@ -74,9 +74,11 @@ class AbstractClientManager:
             The first item is the coroutine to run and the second is the arguments it needs.
         """
         if self.performance_test:
-            task = self.client.performance_test_client, (self.performance_test,)
+            task = self.client.performance_test_client, (
+                self.performance_test,)
         elif self.concurrency_test:
-            task = self.client.concurrency_test_client, (self.concurrency_test,)
+            task = self.client.concurrency_test_client, (
+                self.concurrency_test,)
         elif self.file:
             task = self.client.send_file_task, (self.file,)
         elif self.string:
@@ -90,9 +92,10 @@ class AbstractClientManager:
         """Connect to the server and wait until the connection is closed."""
         # Get a reference to the event loop as we plan to use low-level APIs.
         asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
-        self.loop.set_exception_handler(common.asyncio_exception_handler)
+        self.loop.set_exception_handler(asyncio_exception_handler)
         on_con_lost = self.loop.create_future()
-        ssl_context = ssl.create_default_context(purpose=ssl.Purpose.CLIENT_AUTH) if self.ssl else None
+        ssl_context = ssl.create_default_context(
+            purpose=ssl.Purpose.CLIENT_AUTH) if self.ssl else None
 
         while True:
             try:
@@ -106,15 +109,18 @@ class AbstractClientManager:
                     ssl=ssl_context)
                 self.client = protocol
             except ConnectionRefusedError:
-                self.logger.error("Could not connect to master. Trying again in 10 seconds.")
+                self.logger.error(
+                    "Could not connect to master. Trying again in 10 seconds.")
                 await asyncio.sleep(self.cluster_items['intervals']['worker']['connection_retry'])
                 continue
             except OSError as e:
-                self.logger.error(f"Could not connect to master: {e}. Trying again in 10 seconds.")
+                self.logger.error(
+                    f"Could not connect to master: {e}. Trying again in 10 seconds.")
                 await asyncio.sleep(self.cluster_items['intervals']['worker']['connection_retry'])
                 continue
 
-            self.tasks.extend([(on_con_lost, None), (self.client.client_echo, tuple())] + self.add_tasks())
+            self.tasks.extend(
+                [(on_con_lost, None), (self.client.client_echo, tuple())] + self.add_tasks())
 
             # Wait until the protocol signals that the connection is lost and close the transport.
             try:
@@ -122,14 +128,26 @@ class AbstractClientManager:
             finally:
                 transport.close()
 
-            self.logger.info("The connection has been closed. Reconnecting in 10 seconds.")
+            self.logger.info(
+                "The connection has been closed. Reconnecting in 10 seconds.")
             await asyncio.sleep(self.cluster_items['intervals']['worker']['connection_retry'])
 
 
-class AbstractClient(common.Handler):
+class AbstractClient(Handler):
     """
     Define a client protocol. Handle connection with server.
     """
+
+    def _create_cmd_handlers(self):
+        """
+            Add command handlers to _cmd_handler dictionary
+        """
+        super()._create_cmd_handlers()
+        self._cmd_handler.update(
+            {
+                b'echo-m': lambda _, data: self.echo_client(data),
+            }
+        )
 
     def __init__(self, loop: uvloop.EventLoopPolicy, on_con_lost: asyncio.Future, name: str, fernet_key: str,
                  logger: logging.Logger, manager: AbstractClientManager, cluster_items: Dict, tag: str = "Client"):
@@ -152,7 +170,8 @@ class AbstractClient(common.Handler):
         tag : str
             Log tag.
         """
-        super().__init__(fernet_key=fernet_key, logger=logger, tag=f"{tag} {name}", cluster_items=cluster_items)
+        super().__init__(fernet_key=fernet_key, logger=logger,
+                         tag=f"{tag} {name}", cluster_items=cluster_items)
         self.loop = loop
         self.server = manager
         self.name = name
@@ -185,7 +204,8 @@ class AbstractClient(common.Handler):
             Socket to write data on.
         """
         self.transport = transport
-        future = asyncio.gather(self.log_exceptions(self.send_request(command=b'hello', data=self.client_data)))
+        future = asyncio.gather(self.log_exceptions(
+            self.send_request(command=b'hello', data=self.client_data)))
         future.add_done_callback(self.connection_result)
 
     def connection_lost(self, exc):
@@ -234,28 +254,6 @@ class AbstractClient(common.Handler):
         else:
             return super().process_response(command, payload)
 
-    def process_request(self, command: bytes, data: bytes) -> Tuple[bytes, bytes]:
-        """Define commands available in clients.
-
-        Parameters
-        ----------
-        command : bytes
-            Received command from client.
-        data : bytes
-            Received payload from client.
-
-        Returns
-        -------
-        bytes
-            Result.
-        bytes
-            Response message.
-        """
-        if command == b"echo-m":
-            return self.echo_client(data)
-        else:
-            return super().process_request(command, data)
-
     def echo_client(self, data: bytes) -> Tuple[bytes, bytes]:
         """Handle "echo-m" request.
 
@@ -294,7 +292,8 @@ class AbstractClient(common.Handler):
                     keep_alive_logger.error(f"Error sending keep alive: {e}")
                     n_attempts += 1
                     if n_attempts >= self.cluster_items['intervals']['worker']['max_failed_keepalive_attempts']:
-                        keep_alive_logger.error("Maximum number of failed keep alives reached. Disconnecting.")
+                        keep_alive_logger.error(
+                            "Maximum number of failed keep alives reached. Disconnecting.")
                         self.transport.close()
 
             await asyncio.sleep(self.cluster_items['intervals']['worker']['keep_alive'])
@@ -317,11 +316,11 @@ class AbstractClient(common.Handler):
                 if len(result) != test_size:
                     self.logger.error(result, exc_info=False)
                 else:
-                    self.logger.info(f"Received size: {len(result)} // Time: {after - before}")
+                    self.logger.info(
+                        f"Received size: {len(result)} // Time: {after - before}")
             except Exception as e:
                 self.logger.error(f"Error during performance test: {e}")
             await asyncio.sleep(3)
-
 
     async def concurrency_test_client(self, n_msgs: int):
         """Send lots of requests to the server at the same time.
@@ -339,7 +338,8 @@ class AbstractClient(common.Handler):
                 for i in range(n_msgs):
                     await self.send_request(b'echo', f'concurrency {i}'.encode())
                 after = perf_counter()
-                self.logger.info(f"Time sending {n_msgs} messages: {after - before}")
+                self.logger.info(
+                    f"Time sending {n_msgs} messages: {after - before}")
             except Exception as e:
                 self.logger.error(f"Error during concurrency test: {e}")
             await asyncio.sleep(10)
