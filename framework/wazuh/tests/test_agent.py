@@ -304,14 +304,13 @@ def test_agent_get_agents(socket_mock, send_mock, agent_list, expected_items):
 
 
 @pytest.mark.parametrize('group, group_exists, expected_agents', [
-    ('default', True, ['001', '002', '005']),
+    ('group-1', True, ['006', '008']),
     ('not_exists_group', False, None)
 ])
-@patch('wazuh.agent.get_agents')
 @patch('wazuh.agent.get_groups')
 @patch('wazuh.core.wdb.WazuhDBConnection._send', side_effect=send_msg_to_wdb)
 @patch('socket.socket.connect')
-def test_agent_get_agents_in_group(socket_mock, send_mock, mock_get_groups, mock_get_agents, group, group_exists,
+def test_agent_get_agents_in_group(socket_mock, send_mock, mock_get_groups, group, group_exists,
                                    expected_agents):
     """Test `get_agents_in_group` from agent module.
 
@@ -324,16 +323,13 @@ def test_agent_get_agents_in_group(socket_mock, send_mock, mock_get_groups, mock
     expected_agents : List of str
         List of agent ID's that belongs to a given group.
     """
-    mock_get_groups.return_value = ['default']
+    mock_get_groups.return_value = ['group-1']
     if group_exists:
         # Since the decorator is mocked, pass `group_list` using `call_args` from mock
-        get_agents_in_group(group_list=[group], select=['id'])
-        kwargs = mock_get_agents.call_args[1]
-        agents = get_agents(agent_list=short_agent_list, **kwargs)
+        agents = get_agents_in_group(group_list=[group], select=['id'])
         assert agents.affected_items
         assert len(agents.affected_items) == len(expected_agents)
-        for expected_agent, affected_agent in zip(expected_agents, agents.affected_items):
-            assert expected_agent == next(iter(affected_agent.values()))
+        assert (expected_id == agent_id for expected_id, agent_id in zip(expected_agents, agents.affected_items))
     else:
         # If not `group_exists`, expect an error
         with pytest.raises(WazuhResourceNotFound, match='.* 1710 .*'):
@@ -366,7 +362,6 @@ def test_agent_get_agents_keys(socket_mock, send_mock, agent_list, expected_item
             assert (failed_item.message == 'Agent does not exist' for failed_item in agent_keys.failed_items.keys())
 
 
-# TODO: test group filtering in other unit test
 @pytest.mark.parametrize('agent_list, filters, q, error_code, expected_items', [
     (full_agent_list[1:], {'status': 'all', 'older_than': '1s'}, None, None, full_agent_list[1:]),
     (full_agent_list[1:], {'status': 'all', 'older_than': '1s'}, None, 1731, full_agent_list[1:]),

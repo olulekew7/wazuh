@@ -10,7 +10,8 @@ from typing import Union
 from wazuh.core import common, configuration
 from wazuh.core.InputValidator import InputValidator
 from wazuh.core.agent import WazuhDBQueryAgents, WazuhDBQueryGroupByAgents, WazuhDBQueryMultigroups, Agent, \
-    WazuhDBQueryGroup, create_upgrade_tasks, get_agents_info, get_groups, get_rbac_filters, send_restart_command
+    WazuhDBQueryGroup, create_upgrade_tasks, get_agents_info, get_groups, get_rbac_filters, send_restart_command, \
+    WazuhDBQueryAgentGroupRelationships
 from wazuh.core.cluster.cluster import get_node
 from wazuh.core.cluster.utils import read_cluster_config
 from wazuh.core.exception import WazuhError, WazuhInternalError, WazuhException, WazuhResourceNotFound
@@ -391,10 +392,16 @@ def get_agents_in_group(group_list: list, offset: int = 0, limit: int = common.D
     if group_list[0] not in system_groups:
         raise WazuhResourceNotFound(1710)
 
-    # TODO: query the belongs table to look for the relationship agent-group and then do the query to the agent table
-    q = 'group=' + group_list[0] + (';' + q if q else '')
+    group_query = 'name_group=' + group_list[0]
+    agent_list = []
 
-    return get_agents(offset=offset, limit=limit, sort=sort, search=search, select=select, filters=filters, q=q)
+    with WazuhDBQueryAgentGroupRelationships(query=group_query, select=["id_agent"]) as db_query:
+        data = db_query.run()
+        for item in data['items']:
+            agent_list.append(str(item['id_agent']))
+
+    return get_agents(agent_list=agent_list, offset=offset, limit=limit, sort=sort, search=search, select=select,
+                      filters=filters, q=q)
 
 
 @expose_resources(actions=["agent:read"], resources=["agent:id:{agent_list}"],
