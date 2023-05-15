@@ -18,6 +18,22 @@ class LocalClientHandler(client.AbstractClient):
     Handle connection with the cluster's local server.
     """
 
+    def _create_cmd_handlers(self):
+        """
+            Add handlers to _cmd_handler dictionary
+        """
+        super()._create_cmd_handlers()
+        self._cmd_handler.update(
+            {
+                b'dapi_res': lambda _, data: self._cmd_dapi_res_or_send_f_res(data),
+                b'send_f_res': lambda _, data: self._cmd_dapi_res_or_send_f_res(data),
+                b'ok': lambda _, data: self._cmd_ok(data),
+                b'control_res': lambda _, data: self._cmd_control_res(data),
+                b'dapi_err': lambda _, data: self._cmd_dapi_err(data),
+                b'err': lambda _, data: self._cmd_err(data),
+            }
+        )
+
     def __init__(self, **kwargs):
         """Class constructor.
 
@@ -46,6 +62,41 @@ class LocalClientHandler(client.AbstractClient):
     def _cancel_all_tasks(self):
         pass
 
+    def _cmd_dapi_res_or_send_f_res(self, data: bytes) -> Tuple[bytes, bytes]:
+        if data.startswith(b'Error'):
+            return b'err', self.process_error_from_peer(data)
+        elif data not in self.in_str:
+            return b'err', self.process_error_from_peer(b'Error receiving string: ID ' + data + b' not found.')
+        self.response = self.in_str[data].payload
+        self.response_available.set()
+        # Remove the string after using it
+        self.in_str.pop(data, None)
+        return b'ok', b'Distributed api response received'
+
+    def _cmd_ok(self, data: bytes) -> Tuple[bytes, bytes]:
+        if data.startswith(b'Error'):
+            return b'err', self.process_error_from_peer(data)
+        self.response = data
+        self.response_available.set()
+        return b'ok', b'Sendsync response received'
+
+    def _cmd_control_res(self, data: bytes) -> Tuple[bytes, bytes]:
+        if data.startswith(b'Error'):
+            return b'err', self.process_error_from_peer(data)
+        self.response = data
+        self.response_available.set()
+        return b'ok', b'Response received'
+
+    def _cmd_dapi_err(self, data: bytes) -> Tuple[bytes, bytes]:
+        self.response = data
+        self.response_available.set()
+        return b'ok', b'Response received'
+
+    def _cmd_err(self, data: bytes) -> Tuple[bytes, bytes]:
+        self.response = data
+        self.response_available.set()
+        return b'ok', b'Error response received'
+
     def process_request(self, command: bytes, data: bytes) -> Tuple[bytes, bytes]:
         """Define commands available in a local client.
 
@@ -64,38 +115,7 @@ class LocalClientHandler(client.AbstractClient):
             Response message.
         """
         self.logger.debug(f"Command received: {command}")
-        if command == b'dapi_res' or command == b'send_f_res':
-            if data.startswith(b'Error'):
-                return b'err', self.process_error_from_peer(data)
-            elif data not in self.in_str:
-                return b'err', self.process_error_from_peer(b'Error receiving string: ID ' + data + b' not found.')
-            self.response = self.in_str[data].payload
-            self.response_available.set()
-            # Remove the string after using it
-            self.in_str.pop(data, None)
-            return b'ok', b'Distributed api response received'
-        elif command == b'ok':
-            if data.startswith(b'Error'):
-                return b'err', self.process_error_from_peer(data)
-            self.response = data
-            self.response_available.set()
-            return b'ok', b'Sendsync response received'
-        elif command == b'control_res':
-            if data.startswith(b'Error'):
-                return b'err', self.process_error_from_peer(data)
-            self.response = data
-            self.response_available.set()
-            return b'ok', b'Response received'
-        elif command == b'dapi_err':
-            self.response = data
-            self.response_available.set()
-            return b'ok', b'Response received'
-        elif command == b'err':
-            self.response = data
-            self.response_available.set()
-            return b'ok', b'Error response received'
-        else:
-            return super().process_request(command, data)
+        return self._cmd_handler.get(command, self._command_not_found)(command, data)
 
     def process_error_from_peer(self, data: bytes):
         """Handle "err" response.
@@ -144,11 +164,11 @@ class LocalClient(client.AbstractClientManager):
         on_con_lost = loop.create_future()
         try:
             self.transport, self.protocol = await loop.create_unix_connection(
-                                             protocol_factory=lambda: LocalClientHandler(loop=loop, on_con_lost=on_con_lost,
-                                                                                         name=self.name, logger=self.logger,
-                                                                                         fernet_key='', manager=self,
-                                                                                         cluster_items=self.cluster_items),
-                                             path=os.path.join(common.WAZUH_PATH, 'queue', 'cluster', 'c-internal.sock'))
+                protocol_factory=lambda: LocalClientHandler(loop=loop, on_con_lost=on_con_lost,
+                                                            name=self.name, logger=self.logger,
+                                                            fernet_key='', manager=self,
+                                                            cluster_items=self.cluster_items),
+                path=os.path.join(common.WAZUH_PATH, 'queue', 'cluster', 'c-internal.sock'))
         except (ConnectionRefusedError, FileNotFoundError):
             raise exception.WazuhInternalError(3012)
         except MemoryError:
@@ -176,7 +196,8 @@ class LocalClient(client.AbstractClientManager):
 
         while True:
             elapsed_time = time.perf_counter() - start_time
-            min_timeout = min(max(timeout - elapsed_time, 0), self.cluster_items['intervals']['worker']['keep_alive'])
+            min_timeout = min(max(timeout - elapsed_time, 0),
+                              self.cluster_items['intervals']['worker']['keep_alive'])
             try:
                 await asyncio.wait_for(self.protocol.response_available.wait(), timeout=min_timeout)
                 return self.protocol.response.decode()
