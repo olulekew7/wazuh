@@ -186,7 +186,8 @@ class MasterHandler(server.AbstractServerHandler, c_common.WazuhCommon):
 
         # Sync status variables. Used in cluster_control -i and GET/cluster/healthcheck.
         default_date = utils.get_date_from_timestamp(0)
-        self.integrity_check_status = {'date_start_master': default_date, 'date_end_master': default_date}
+        self.integrity_check_status = {
+            'date_start_master': default_date, 'date_end_master': default_date}
         self.integrity_sync_status = {'date_start_master': default_date, 'tmp_date_start_master': default_date,
                                       'date_end_master': default_date, 'total_extra_valid': 0,
                                       'total_files': {'missing': 0, 'shared': 0, 'extra': 0, 'extra_valid': 0}}
@@ -213,6 +214,33 @@ class MasterHandler(server.AbstractServerHandler, c_common.WazuhCommon):
         # Maximum zip size allowed when syncing Integrity files.
         self.current_zip_limit = self.cluster_items['intervals']['communication']['max_zip_size']
 
+    def _create_cmd_handlers(self):
+        """Add handlers entries to _cmd_handler dictionary.
+        """
+        super()._create_cmd_handlers()
+        self._cmd_handler.update(
+            {
+                b'syn_i_w_m_p': lambda command, _: self.get_permission(command),
+                b'syn_a_w_m_p': lambda command, _: self.get_permission(command),
+                b'syn_i_w_m': lambda command, data: self.setup_sync_integrity(command, data),
+                b'syn_e_w_m': lambda command, data: self.setup_sync_integrity(command, data),
+                b'syn_a_w_m': lambda command, data: self.setup_sync_integrity(command, data),
+                b'syn_w_g_c': lambda command, _: self.setup_send_info(command),
+                b'syn_i_w_m_e': lambda _, data: self.end_receiving_integrity_checksums(data.decode()),
+                b'syn_e_w_m_e': lambda _, data: self.end_receiving_integrity_checksums(data.decode()),
+                b'syn_i_w_m_r': lambda _, data: self.process_sync_error_from_worker(data),
+                b'syn_w_g_e': lambda _, data: self._cmd_syn_w_g_e(data),
+                b'syn_wgc_e': lambda _, data: self._cmd_syn_wgc_e(data),
+                b'syn_w_g_err': lambda _, data: self._cmd_syn_w_g_err(data),
+                b'syn_wgc_err': lambda _, data: self._cmd_syn_wgc_err(data),
+                b'dapi': lambda _, data: self._cmd_dapi(data),
+                b'dapi_res': lambda _, data: self.process_dapi_res(data),
+                b'get_nodes': lambda _, data: self._cmd_get_nodes(data),
+                b'get_health': lambda _, data: self._cmd_get_health(data),
+                b'sendsync': lambda _, data: self._cmd_sendsync(data),
+            }
+        )
+
     def to_dict(self):
         """Get worker healthcheck information.
 
@@ -234,6 +262,160 @@ class MasterHandler(server.AbstractServerHandler, c_common.WazuhCommon):
                            'last_keep_alive': self.last_keepalive}
                 }
 
+    def _cmd_syn_w_g_e(self, data: bytes):
+        """Handle incoming syn_w_g_e requests
+
+        Parameters
+        ----------
+        data : bytes
+            Received payload.
+
+        Returns
+        -------
+        bytes
+            Result.
+        bytes
+            Response message.            
+        """
+        logger = self.task_loggers['Agent-groups send']
+        start_time = self.send_agent_groups_status['date_start']
+        if isinstance(start_time, str):
+            start_time = datetime.strptime(start_time, DECIMALS_DATE_FORMAT)
+        start_time = start_time.timestamp()
+        return c_common.end_sending_agent_information(logger, start_time, data.decode())
+
+    def _cmd_syn_wgc_e(self, data: bytes):
+        """Handle incoming syn_wgc_e requests
+
+        Parameters
+        ----------
+        data : bytes
+            Received payload.
+
+        Returns
+        -------
+        bytes
+            Result.
+        bytes
+            Response message.            
+        """
+        logger = self.task_loggers['Agent-groups send full']
+        start_time = self.send_full_agent_groups_status['date_start']
+        if isinstance(start_time, str):
+            start_time = datetime.strptime(start_time, DECIMALS_DATE_FORMAT)
+        start_time = start_time.timestamp()
+        return c_common.end_sending_agent_information(logger, start_time, data.decode())
+
+    def _cmd_syn_w_g_err(self, data: bytes):
+        """Handle incoming syn_w_g_err requests
+
+        Parameters
+        ----------
+        data : bytes
+            Received payload.
+
+        Returns
+        -------
+        bytes
+            Result.
+        bytes
+            Response message.            
+        """
+        logger = self.task_loggers['Agent-groups send']
+        return c_common.error_receiving_agent_information(logger, data.decode(), info_type='agent-groups')
+
+    def _cmd_syn_wgc_err(self, data: bytes):
+        """Handle incoming syn_wgc_err requests
+
+        Parameters
+        ----------
+        data : bytes
+            Received payload.
+
+        Returns
+        -------
+        bytes
+            Result.
+        bytes
+            Response message.            
+        """
+        logger = self.task_loggers['Agent-groups send full']
+        return c_common.error_receiving_agent_information(logger, data.decode(), info_type='agent-groups')
+
+    def _cmd_dapi(self, data: bytes):
+        """Handle incoming dapi requests
+
+        Parameters
+        ----------
+        data : bytes
+            Received payload.
+
+        Returns
+        -------
+        bytes
+            Result.
+        bytes
+            Response message.            
+        """
+        self.server.dapi.add_request(self.name.encode() + b'*' + data)
+        return b'ok', b'Added request to API requests queue'
+
+    def _cmd_get_nodes(self, data: bytes):
+        """Handle incoming get_nodes requests
+
+        Parameters
+        ----------
+        data : bytes
+            Received payload.
+
+        Returns
+        -------
+        bytes
+            Result.
+        bytes
+            Response message.            
+        """
+        cmd, res = self.get_nodes(json.loads(data))
+        return cmd, json.dumps(res).encode()
+
+    def _cmd_get_health(self, data: bytes):
+        """Handle incoming get_health requests
+
+        Parameters
+        ----------
+        data : bytes
+            Received payload.
+
+        Returns
+        -------
+        bytes
+            Result.
+        bytes
+            Response message.            
+        """
+        cmd, res = self.get_health(json.loads(data))
+        return cmd, json.dumps(
+            res, default=lambda o: "n/a" if isinstance(o, datetime) and o == utils.get_date_from_timestamp(0) else
+            (o.__str__() if isinstance(o, datetime) else None)).encode()
+
+    def _cmd_sendsync(self, data: bytes):
+        """Handle incoming sendsync requests
+
+        Parameters
+        ----------
+        data : bytes
+            Received payload.
+
+        Returns
+        -------
+        bytes
+            Result.
+        bytes
+            Response message.            
+        """
+        self.server.sendsync.add_request(self.name.encode() + b'*' + data)
+        return b'ok', b'Added request to SendSync requests queue'
+
     def process_request(self, command: bytes, data: bytes) -> Tuple[bytes, bytes]:
         """Define all available commands that can be received from a worker node.
 
@@ -252,54 +434,7 @@ class MasterHandler(server.AbstractServerHandler, c_common.WazuhCommon):
             Response message.
         """
         self.logger.debug(f"Command received: {command}")
-        if command == b'syn_i_w_m_p' or command == b'syn_a_w_m_p':
-            return self.get_permission(command)
-        elif command == b'syn_i_w_m' or command == b'syn_e_w_m' or command == b'syn_a_w_m':
-            return self.setup_sync_integrity(command, data)
-        elif command == b'syn_w_g_c':
-            return self.setup_send_info(command)
-        elif command == b'syn_i_w_m_e' or command == b'syn_e_w_m_e':
-            return self.end_receiving_integrity_checksums(data.decode())
-        elif command == b'syn_i_w_m_r':
-            return self.process_sync_error_from_worker(data)
-        elif command == b'syn_w_g_e':
-            logger = self.task_loggers['Agent-groups send']
-            start_time = self.send_agent_groups_status['date_start']
-            if isinstance(start_time, str):
-                start_time = datetime.strptime(start_time, DECIMALS_DATE_FORMAT)
-            start_time = start_time.timestamp()
-            return c_common.end_sending_agent_information(logger, start_time, data.decode())
-        elif command == b'syn_wgc_e':
-            logger = self.task_loggers['Agent-groups send full']
-            start_time = self.send_full_agent_groups_status['date_start']
-            if isinstance(start_time, str):
-                start_time = datetime.strptime(start_time, DECIMALS_DATE_FORMAT)
-            start_time = start_time.timestamp()
-            return c_common.end_sending_agent_information(logger, start_time, data.decode())
-        elif command == b'syn_w_g_err':
-            logger = self.task_loggers['Agent-groups send']
-            return c_common.error_receiving_agent_information(logger, data.decode(), info_type='agent-groups')
-        elif command == b'syn_wgc_err':
-            logger = self.task_loggers['Agent-groups send full']
-            return c_common.error_receiving_agent_information(logger, data.decode(), info_type='agent-groups')
-        elif command == b'dapi':
-            self.server.dapi.add_request(self.name.encode() + b'*' + data)
-            return b'ok', b'Added request to API requests queue'
-        elif command == b'dapi_res':
-            return self.process_dapi_res(data)
-        elif command == b'get_nodes':
-            cmd, res = self.get_nodes(json.loads(data))
-            return cmd, json.dumps(res).encode()
-        elif command == b'get_health':
-            cmd, res = self.get_health(json.loads(data))
-            return cmd, json.dumps(
-                res, default=lambda o: "n/a" if isinstance(o, datetime) and o == utils.get_date_from_timestamp(0) else
-                (o.__str__() if isinstance(o, datetime) else None)).encode()
-        elif command == b'sendsync':
-            self.server.sendsync.add_request(self.name.encode() + b'*' + data)
-            return b'ok', b'Added request to SendSync requests queue'
-        else:
-            return super().process_request(command, data)
+        return self._cmd_handler.get(command, self._command_not_found)(command, data)
 
     async def execute(self, command: bytes, data: bytes, wait_for_complete: bool) -> Dict:
         """Send DAPI request and wait for response.
@@ -323,7 +458,8 @@ class MasterHandler(server.AbstractServerHandler, c_common.WazuhCommon):
         """
         request_id = str(uuid4())
         # Create an event to wait for the response.
-        self.server.pending_api_requests[request_id] = {'Event': asyncio.Event(), 'Response': ''}
+        self.server.pending_api_requests[request_id] = {
+            'Event': asyncio.Event(), 'Response': ''}
 
         # If forward request to other worker, get destination client and request.
         if command == b'dapi_fwd':
@@ -354,7 +490,8 @@ class MasterHandler(server.AbstractServerHandler, c_common.WazuhCommon):
         else:
             status, request_result = result
             if status != b'ok':
-                raise exception.WazuhClusterError(3022, extra_message=request_result.decode())
+                raise exception.WazuhClusterError(
+                    3022, extra_message=request_result.decode())
             request_result = request_result.decode()
         return request_result
 
@@ -387,7 +524,8 @@ class MasterHandler(server.AbstractServerHandler, c_common.WazuhCommon):
                              'Agent-groups send full': self.setup_task_logger('Agent-groups send full')}
 
         # Fill more information and check both name and version are correct.
-        self.version, self.cluster_name, self.node_type = version.decode(), cluster_name.decode(), node_type.decode()
+        self.version, self.cluster_name, self.node_type = version.decode(
+        ), cluster_name.decode(), node_type.decode()
 
         if self.cluster_name != self.server.configuration['name']:
             raise exception.WazuhClusterError(3030)
@@ -395,12 +533,14 @@ class MasterHandler(server.AbstractServerHandler, c_common.WazuhCommon):
             raise exception.WazuhClusterError(3031)
 
         # Create directory where zips and other files coming from or going to the worker will be managed.
-        worker_dir = os.path.join(common.WAZUH_PATH, 'queue', 'cluster', self.name)
+        worker_dir = os.path.join(
+            common.WAZUH_PATH, 'queue', 'cluster', self.name)
         if cmd == b'ok' and not os.path.exists(worker_dir):
             utils.mkdir_with_mode(worker_dir)
 
         # SyncFiles instance used to zip and send integrity files to worker.
-        self.integrity = c_common.SyncFiles(cmd=b'syn_m_c', logger=self.task_loggers['Integrity sync'], manager=self)
+        self.integrity = c_common.SyncFiles(
+            cmd=b'syn_m_c', logger=self.task_loggers['Integrity sync'], manager=self)
 
         # SyncWazuhdb instance to send agent-groups data to the worker.
         wdb_conn = AsyncWazuhDBConnection()
@@ -445,7 +585,8 @@ class MasterHandler(server.AbstractServerHandler, c_common.WazuhCommon):
         req_id, string_id = data.split(b' ', 1)
         req_id = req_id.decode()
         if req_id in self.server.pending_api_requests:
-            self.server.pending_api_requests[req_id]['Response'] = self.in_str[string_id].payload.decode()
+            self.server.pending_api_requests[req_id]['Response'] = self.in_str[string_id].payload.decode(
+            )
             self.server.pending_api_requests[req_id]['Event'].set()
             # Remove the string after using it
             self.in_str.pop(string_id, None)
@@ -698,7 +839,8 @@ class MasterHandler(server.AbstractServerHandler, c_common.WazuhCommon):
             self.send_agent_groups_status['date_start'] = get_utc_now().strftime(DECIMALS_DATE_FORMAT)
             await self.agent_groups.sync(start_time=self.send_agent_groups_status['date_start'], chunks=groups_info)
         except Exception as e:
-            logger.error(f'Error sending agent-groups information to {self.name}: {e}')
+            logger.error(
+                f'Error sending agent-groups information to {self.name}: {e}')
 
     def set_date_end_master(self, logger):
         """Store the datetime when Integrity sync is completed and log 'Finished in' message.
@@ -713,9 +855,11 @@ class MasterHandler(server.AbstractServerHandler, c_common.WazuhCommon):
                                                    self.integrity_sync_status['tmp_date_start_master'])
                                                   .total_seconds()))
         self.integrity_sync_status['date_start_master'] = \
-            self.integrity_sync_status['tmp_date_start_master'].strftime(DECIMALS_DATE_FORMAT)
+            self.integrity_sync_status['tmp_date_start_master'].strftime(
+                DECIMALS_DATE_FORMAT)
         self.integrity_sync_status['date_end_master'] = \
-            self.integrity_sync_status['date_end_master'].strftime(DECIMALS_DATE_FORMAT)
+            self.integrity_sync_status['date_end_master'].strftime(
+                DECIMALS_DATE_FORMAT)
 
     async def integrity_check(self, task_id: str, received_file: asyncio.Event):
         """Compare master and worker files and start Integrity sync if they differ.
@@ -751,7 +895,8 @@ class MasterHandler(server.AbstractServerHandler, c_common.WazuhCommon):
         shutil.rmtree(decompressed_files_path)
 
         # Classify files in shared, missing, extra and extra valid.
-        files_classif = cluster.compare_files(self.server.integrity_control, files_metadata, self.name)
+        files_classif = cluster.compare_files(
+            self.server.integrity_control, files_metadata, self.name)
 
         total_time = (utils.get_utc_now() - date_start_master).total_seconds()
         self.extra_valid_requested = False
@@ -790,8 +935,10 @@ class MasterHandler(server.AbstractServerHandler, c_common.WazuhCommon):
                     f"Files to delete in worker: {len(files_classif['extra'])}")
 
         # Send files and metadata to the worker node.
-        metadata_len = functools.reduce(operator.add, map(len, files_classif.values()))
-        master_files_paths = files_classif['shared'].keys() | files_classif['missing'].keys()
+        metadata_len = functools.reduce(
+            operator.add, map(len, files_classif.values()))
+        master_files_paths = files_classif['shared'].keys(
+        ) | files_classif['missing'].keys()
         await self.integrity.sync(master_files_paths, files_classif, metadata_len, self.server.task_pool,
                                   self.current_zip_limit)
 
@@ -835,7 +982,8 @@ class MasterHandler(server.AbstractServerHandler, c_common.WazuhCommon):
         if isinstance(received_filename, Exception):
             raise received_filename
 
-        logger.debug(f"Received extra-valid file from worker: '{received_filename}'")
+        logger.debug(
+            f"Received extra-valid file from worker: '{received_filename}'")
 
         # Path to metadata file (files_metadata.json) and to zipdir (directory with decompressed files).
         files_metadata, decompressed_files_path = await cluster.async_decompress_files(received_filename)
@@ -853,7 +1001,8 @@ class MasterHandler(server.AbstractServerHandler, c_common.WazuhCommon):
         # Log any possible error found in the process.
         self.integrity_sync_status['total_extra_valid'] = result['total_updated']
         if result['errors_per_folder']:
-            logger.error(f"Errors updating worker files: {dict(result['errors_per_folder'])}", exc_info=False)
+            logger.error(
+                f"Errors updating worker files: {dict(result['errors_per_folder'])}", exc_info=False)
         for error in result['generic_errors']:
             logger.error(error, exc_info=False)
 
@@ -880,7 +1029,8 @@ class MasterHandler(server.AbstractServerHandler, c_common.WazuhCommon):
         result : dict
             Dict containing number of updated chunks and any error found in the process.
         """
-        result = {'total_updated': 0, 'errors_per_folder': defaultdict(list), 'generic_errors': []}
+        result = {'total_updated': 0, 'errors_per_folder': defaultdict(
+            list), 'generic_errors': []}
 
         try:
             with utils.Timeout(timeout):
@@ -899,16 +1049,19 @@ class MasterHandler(server.AbstractServerHandler, c_common.WazuhCommon):
                         ):
                             try:
                                 # Destination path.
-                                full_unmerged_name = os.path.join(common.WAZUH_PATH, unmerged_file_path)
+                                full_unmerged_name = os.path.join(
+                                    common.WAZUH_PATH, unmerged_file_path)
                                 # Path where to create the file before moving it to the destination path.
                                 tmp_unmerged_path = os.path.join(common.WAZUH_PATH, 'queue', 'cluster', worker_name,
                                                                  os.path.basename(unmerged_file_path))
 
                                 # Format the file_data specified inside the merged file.
                                 try:
-                                    mtime = utils.get_utc_strptime(file_time, '%Y-%m-%d %H:%M:%S.%f%z')
+                                    mtime = utils.get_utc_strptime(
+                                        file_time, '%Y-%m-%d %H:%M:%S.%f%z')
                                 except ValueError:
-                                    mtime = utils.get_utc_strptime(file_time, '%Y-%m-%d %H:%M:%S%z')
+                                    mtime = utils.get_utc_strptime(
+                                        file_time, '%Y-%m-%d %H:%M:%S%z')
 
                                 # If the file already existed, check if it is older than the one from worker.
                                 if os.path.isfile(full_unmerged_name):
@@ -923,29 +1076,35 @@ class MasterHandler(server.AbstractServerHandler, c_common.WazuhCommon):
 
                                 mtime_epoch = timegm(mtime.timetuple())
                                 utils.safe_move(tmp_unmerged_path, full_unmerged_name,
-                                                ownership=(common.wazuh_uid(), common.wazuh_gid()),
+                                                ownership=(
+                                                    common.wazuh_uid(), common.wazuh_gid()),
                                                 permissions=cluster_items['files'][item_key]['permissions'],
                                                 time=(mtime_epoch, mtime_epoch))
                                 result['total_updated'] += 1
                             except TimeoutError as e:
                                 raise e
                             except Exception as e:
-                                result['errors_per_folder'][item_key].append(str(e))
+                                result['errors_per_folder'][item_key].append(
+                                    str(e))
 
                     # If the file is not 'merged' type, move it directly to the destination path.
                     else:
                         try:
-                            zip_path = os.path.join(decompressed_files_path, file_path)
+                            zip_path = os.path.join(
+                                decompressed_files_path, file_path)
                             utils.safe_move(zip_path, full_path, ownership=(common.wazuh_uid(), common.wazuh_gid()),
                                             permissions=cluster_items['files'][item_key]['permissions'])
                         except TimeoutError as e:
                             raise e
                         except Exception as e:
-                            result['errors_per_folder'][item_key].append(str(e))
+                            result['errors_per_folder'][item_key].append(
+                                str(e))
         except TimeoutError:
-            result['generic_errors'].append("Timeout processing extra-valid files.")
+            result['generic_errors'].append(
+                "Timeout processing extra-valid files.")
         except Exception as e:
-            result['generic_errors'].append(f"Error updating worker files (extra valid): '{str(e)}'.")
+            result['generic_errors'].append(
+                f"Error updating worker files (extra valid): '{str(e)}'.")
 
         return result
 
@@ -1013,7 +1172,8 @@ class Master(server.AbstractServer):
         self.integrity_already_executed = []
         self.dapi = dapi.APIRequestQueue(server=self)
         self.sendsync = dapi.SendSyncRequestQueue(server=self)
-        self.tasks.extend([self.dapi.run, self.sendsync.run, self.file_status_update, self.agent_groups_update])
+        self.tasks.extend([self.dapi.run, self.sendsync.run,
+                          self.file_status_update, self.agent_groups_update])
         # pending API requests waiting for a response
         self.pending_api_requests = {}
 
@@ -1055,13 +1215,15 @@ class Master(server.AbstractServer):
                 sync_object.logger.info("Starting.")
                 if len(self.clients.keys()) > 0:
                     if groups_info := await sync_object.retrieve_information():
-                        self.broadcast(MasterHandler.send_agent_groups_information, groups_info)
+                        self.broadcast(
+                            MasterHandler.send_agent_groups_information, groups_info)
                     after = perf_counter()
                     logger.info(f"Finished in {(after - before):.3f}s.")
                 elif len(self.clients.keys()) == 0:
                     logger.info("No clients connected. Skipping.")
             except Exception as e:
-                sync_object.logger.error(f"Error getting agent-groups from WDB: {e}")
+                sync_object.logger.error(
+                    f"Error getting agent-groups from WDB: {e}")
 
             await asyncio.sleep(self.cluster_items['intervals']['master']['sync_agent_groups'])
 
@@ -1081,7 +1243,8 @@ class Master(server.AbstractServer):
                 self.integrity_control = await cluster.run_in_pool(self.loop, self.task_pool, cluster.get_files_status,
                                                                    self.integrity_control)
             except Exception as e:
-                file_integrity_logger.error(f"Error calculating local file integrity: {e}")
+                file_integrity_logger.error(
+                    f"Error calculating local file integrity: {e}")
             finally:
                 # With this we avoid that each worker starts integrity_check more than once per local_integrity
                 self.integrity_already_executed.clear()
@@ -1108,7 +1271,8 @@ class Master(server.AbstractServer):
                         if filter_node is None or filter_node == {} or key in filter_node}
         n_connected_nodes = len(workers_info)
         if filter_node is None or self.configuration['node_name'] in filter_node:
-            workers_info.update({self.configuration['node_name']: self.to_dict()})
+            workers_info.update(
+                {self.configuration['node_name']: self.to_dict()})
 
         # Get active agents by node and format last keep alive date format
         for node_name in workers_info.keys():
