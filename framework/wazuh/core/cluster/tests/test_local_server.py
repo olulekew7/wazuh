@@ -50,8 +50,7 @@ def test_LocalServerHandler_connection_made():
             logger_debug_mock.assert_called_once_with("Connection received in local server.")
 
 
-@patch("wazuh.core.cluster.local_server.server.AbstractServerHandler.process_request")
-def test_LocalServerHandler_process_request(process_request_mock):
+def test_LocalServerHandler_process_request():
     """Check the functions that are executed according to the command received."""
     lsh = LocalServerHandler(server=None, loop=loop, fernet_key=None, cluster_items={})
     with patch.object(lsh, "get_config") as get_config_mock:
@@ -70,9 +69,9 @@ def test_LocalServerHandler_process_request(process_request_mock):
         lsh.process_request(command=b"send_file", data=b"test send_file")
         send_file_mock.assert_called_with("test", "send_file")
 
-    lsh.process_request(command=b"process_request", data=b"test process_request")
-    process_request_mock.assert_called_with(b"process_request", b"test process_request")
-
+    # Test command not found
+    command = b'not_found_command'
+    assert lsh.process_request(command=command, data=b"data") == (b'err', f"unknown command '{command}'".encode())
 
 def test_LocalServerHandler_get_config():
     """Set the behavior of the get_config function."""
@@ -251,9 +250,8 @@ async def test_LocalServer_start(loop_mock, set_event_loop_mock, eventlooppolicy
 
 
 @patch("asyncio.create_task")
-@patch("wazuh.core.cluster.local_server.server.AbstractServerHandler.process_request")
 @patch("asyncio.get_running_loop", return_value=loop)
-def test_LocalServerHandlerMaster_process_request(loop_mock, process_request_mock, create_task_mock):
+def test_LocalServerHandlerMaster_process_request(loop_mock, create_task_mock):
     """Check that all available responses are defined on the local master server."""
 
     class ClientMock:
@@ -278,9 +276,8 @@ def test_LocalServerHandlerMaster_process_request(loop_mock, process_request_moc
 
     with patch("wazuh.core.cluster.local_server.context_tag", ContextVar("tag", default="")) as mock_contextvar:
         lshm.name = "test1"
-        lshm.process_request(command=b"hello", data=b"bye")
+        assert lshm.process_request(command=b"hello", data=b"bye") is None
         assert mock_contextvar.get() == f"Local {lshm.name}"
-        process_request_mock.assert_called_with(b"hello", b"bye")
 
     with patch.object(server_mock.dapi, "add_request") as add_request_mock:
         assert lshm.process_request(command=b"dapi", data=b"bye") == (b"ok", b"Added request to API requests queue")
@@ -377,9 +374,8 @@ def test_LocalServerMaster_init(loop_mock):
 
 
 @patch("asyncio.create_task")
-@patch("wazuh.core.cluster.local_server.LocalServerHandler.process_request")
 @patch("asyncio.get_running_loop", return_value=loop)
-def test_LocalServerHandlerWorker_process_request(loop_mock, process_request_mock, create_task_mock):
+def test_LocalServerHandlerWorker_process_request(loop_mock, create_task_mock):
     """Check that all available responses are defined on the local worker server."""
 
     class LoggerMock:
@@ -404,9 +400,8 @@ def test_LocalServerHandlerWorker_process_request(loop_mock, process_request_moc
 
     with patch("wazuh.core.cluster.local_server.context_tag", ContextVar("tag", default="")) as mock_contextvar:
         lshw.name = "test1"
-        lshw.process_request(command=b"hello", data=b"bye")
+        assert lshw.process_request(command=b"hello", data=b"bye") is None
         assert mock_contextvar.get() == f"Local {lshw.name}"
-        process_request_mock.assert_called_with(b"hello", b"bye")
 
     with pytest.raises(WazuhClusterError, match=".* 3023 .*"):
         lshw.process_request(command=b"dapi", data=b"bye")
