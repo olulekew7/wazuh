@@ -336,30 +336,6 @@ class WazuhDBQueryGroup(WazuhDBQuery):
             # if only traditional filters have been defined, remove last AND from the query.
             self.query_filters[-1]['separator'] = '' if not self.q else 'AND'
 
-    # TODO: use this function where it's appropiate
-    def _process_group_filter(self, field_filter: str, q_filter: dict):
-        """Process filters for specific fields.
-
-        Raises
-        ------
-        WazuhError(1409)
-            If the operator of the filter is not valid.
-        """
-        field_name = 'name'
-        valid_group_operators = {'=', '!=', '~'}
-
-        if q_filter['operator'] == '=':
-            self.query += f"(',' || {self.fields[field_name]} || ',') LIKE :{field_filter}"
-            self.request[field_filter] = f"%,{q_filter['value']},%"
-        elif q_filter['operator'] == '!=':
-            self.query += f"NOT (',' || {self.fields[field_name]} || ',') LIKE :{field_filter}"
-            self.request[field_filter] = f"%,{q_filter['value']},%"
-        elif q_filter['operator'] == 'LIKE':
-            self.query += f"{self.fields[field_name]} LIKE :{field_filter}"
-            self.request[field_filter] = f"%{q_filter['value']}%"
-        else:
-            raise WazuhError(1409, f"Valid operators for 'group' field: {', '.join(valid_group_operators)}. "
-                                   f"Used operator: {q_filter['operator']}")
 
 
 class WazuhDBQueryDistinctAgents(WazuhDBQueryDistinct, WazuhDBQueryAgents):
@@ -458,6 +434,66 @@ class WazuhDBQueryMultigroups(WazuhDBQueryAgents):
         self.total_items = self.backend.execute(self.query.format(self._default_count_query()), self.request, True)
         self.query += ' GROUP BY a.id '
 
+class WazuhDBQueryAgentGroupRelationships(WazuhDBQuery):
+    """Class used to query relationships between agents and groups."""
+
+    fields = {'id_agent': 'id_agent', 'name_group': 'name_group'}
+
+    def __init__(self, offset: int = 0, limit: int = common.DATABASE_LIMIT, sort: dict = None, search: dict = None,
+                 select: list = None, count: bool = True, query: str = '', filters: dict = None,
+                 default_sort_field: str = 'id_agent', get_data: bool = True):
+        """Class constructor.
+
+        Parameters
+        ----------
+        offset : int
+            First item to return.
+        limit : int
+            Maximum number of items to return.
+        sort : dict
+            Sorts the items. Format: {"fields":["field1","field2"],"order":"asc|desc"}.
+        select : list
+            Select fields to return. Format: ["field1","field2"].
+        filters : dict
+            Defines field filters required by the user. Format: {"field1":"value1", "field2":["value2","value3"]}
+        query : str
+            Query to filter in database. Format: field operator value.
+        search : dict
+            Looks for items with the specified string. Format: {"fields": ["field1","field2"]}
+        default_sort_field : str
+            By default, return elements sorted by this field
+        count : bool
+            Whether to compute totalItems or not.
+        get_data : bool
+            Whether to return data or not.
+        """
+        backend = WazuhDBBackend(query_format='global')
+        WazuhDBQuery.__init__(self, offset=offset, limit=limit, table='belongs', sort=sort, search=search, select=select,
+                              filters=filters, fields=self.fields, default_sort_field=default_sort_field,
+                              default_sort_order='ASC', query=query, backend=backend, count=count, get_data=get_data)
+
+    def _process_filter(self, field_name: str, field_filter: str, q_filter: dict):
+        """Process filters for specific fields.
+
+        Raises
+        ------
+        WazuhError(1409)
+            If the operator of the filter is not valid.
+        """
+        valid_group_operators = {'=', '!=', '~'}
+
+        if q_filter['operator'] == '=':
+            self.query += f"(',' || {self.fields[field_name]} || ',') LIKE :{field_filter}"
+            self.request[field_filter] = f"%,{q_filter['value']},%"
+        elif q_filter['operator'] == '!=':
+            self.query += f"NOT (',' || {self.fields[field_name]} || ',') LIKE :{field_filter}"
+            self.request[field_filter] = f"%,{q_filter['value']},%"
+        elif q_filter['operator'] == 'LIKE':
+            self.query += f"{self.fields[field_name]} LIKE :{field_filter}"
+            self.request[field_filter] = f"%{q_filter['value']}%"
+        else:
+            raise WazuhError(1409, f"Valid operators for 'group' field: {', '.join(valid_group_operators)}. "
+                                   f"Used operator: {q_filter['operator']}")
 
 class Agent:
     """Wazuh Agent object."""

@@ -303,42 +303,6 @@ def test_WazuhDBQueryGroup_filters(socket_mock, send_mock, filters):
     for item in result['items']:
         assert (item[key] == value for key, value in filters.items())
 
-@pytest.mark.parametrize('field_filter, q_filter', [
-    ('field', {'value': '1', 'operator': '='}),
-    ('test', {'value': '1', 'operator': '!='}),
-    ('test', {'value': '1', 'operator': 'LIKE'}),
-    ('test', {'value': '1', 'operator': '<'}),
-])
-@patch('socket.socket.connect')
-def test_WazuhDBQueryGroup_process_filter(mock_socket_conn, field_filter, q_filter):
-    """Tests _process_filter of WazuhDBQueryAgents returns expected query
-
-    Parameters
-    ----------
-    field_filter : str
-        Defines field filters required by the user.
-    q_filter : dict
-        Query to filter in database.
-    """
-    query_agent = WazuhDBQueryGroup()
-    try:
-        query_agent._process_group_filter(field_filter, q_filter)
-    except WazuhError as e:
-        assert e.code == 1409 and q_filter['operator'] not in {'=', '!=', 'LIKE'}
-        return
-
-    equal_regex = r"\(',' || [\w`]+ || ','\) LIKE :\w+"
-    not_equal_regex = f"NOT {equal_regex}"
-    like_regex = r"[\w`]+ LIKE :\w+"
-    if q_filter['operator'] == '=':
-        assert re.search(equal_regex, query_agent.query)
-    elif q_filter['operator'] == '!=':
-        assert re.search(not_equal_regex, query_agent.query)
-    elif q_filter['operator'] == 'LIKE':
-        assert re.search(like_regex, query_agent.query)
-    else:
-        pytest.fail('Unexpected operator')
-
 @patch('socket.socket.connect')
 def test_WazuhDBQueryGroupByAgents__init__(mock_socket_conn):
     """Tests if method __init__ of WazuhDBQueryGroupByAgents works properly."""
@@ -445,6 +409,67 @@ def test_WazuhDBQueryMultigroups_get_total_items(mock_socket_conn, send_mock):
 
     assert 'GROUP BY a.id' in query_multigroups.query, 'Query returned does not match the expected one'
 
+
+@pytest.mark.parametrize('value', [
+    True,
+    OSError
+])
+@patch("wazuh.core.agent.WazuhDBBackend")
+@patch('wazuh.core.wdb.WazuhDBConnection._send', side_effect=send_msg_to_wdb)
+@patch('socket.socket.connect')
+def test_WazuhDBQueryAgentGroupRelationships__init__(socket_mock, send_mock, backend_mock, value):
+    """Tests if method __init__ of WazuhDBQueryAgentGroupRelationships works properly.
+
+    Parameters
+    ----------
+    mock_sqli_conn : mock
+        Mock of SQLite connection.
+    value : boolean
+        Boolean to be returned by the method glob.glob().
+    """
+    socket_mock.side_effect = value
+    if value:
+        WazuhDBQueryAgentGroupRelationships()
+        backend_mock.assert_called_once()
+    else:
+        with pytest.raises(WazuhException, match=".* 2005 .*"):
+            WazuhDBQueryAgentGroupRelationships()
+
+
+@pytest.mark.parametrize('field_filter, q_filter', [
+    ('field', {'value': '1', 'operator': '='}),
+    ('test', {'value': '1', 'operator': '!='}),
+    ('test', {'value': '1', 'operator': 'LIKE', 'field': 'name_group'}),
+])
+@patch('socket.socket.connect')
+def test_WazuhDBQueryAgentGroupRelationships_process_filter(mock_socket_conn, field_filter, q_filter):
+    """Tests _process_filter of WazuhDBQueryAgentGroupRelationships returns expected query
+
+    Parameters
+    ----------
+    field_filter : str
+        Defines field filters required by the user.
+    q_filter : dict
+        Query to filter in database.
+    """
+    query_agent = WazuhDBQueryAgentGroupRelationships()
+    try:
+        query_agent._process_filter('name_group', field_filter, q_filter)
+    except WazuhError as e:
+        assert e.code == 1409 and q_filter['operator'] not in {'=', '!=', 'LIKE'}
+        return
+
+    equal_regex = r"\(',' || [\w`]+ || ','\) LIKE :\w+"
+    not_equal_regex = f"NOT {equal_regex}"
+    like_regex = r"[\w`]+ LIKE :\w+"
+    if q_filter['operator'] == '=':
+        assert re.search(equal_regex, query_agent.query)
+    elif q_filter['operator'] == '!=':
+        assert re.search(not_equal_regex, query_agent.query)
+    elif q_filter['operator'] == 'LIKE':
+        assert re.search(like_regex, query_agent.query)
+    else:
+        pytest.fail('Unexpected operator')
 
 @pytest.mark.parametrize('id, ip, name, key', [
     ('1', '127.0.0.1', 'test_agent', 'b3650e11eba2f27er4d160c69de533ee7eed6016fga85ba2455d53a90927747D'),
