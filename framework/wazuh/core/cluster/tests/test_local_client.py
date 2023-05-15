@@ -4,7 +4,7 @@
 
 from asyncio import Event, Transport
 from asyncio.transports import BaseTransport
-from collections import Callable
+from collections.abc import Callable
 from unittest.mock import patch, AsyncMock, call
 
 import pytest
@@ -52,48 +52,57 @@ def test_localclienthandler_process_request(mock_set):
     lc = LocalClientHandler(loop=None, on_con_lost=None, name="Unittest",
                             logger=None, fernet_key=None, manager=None, cluster_items=None)
     command = b"dapi_res"
-    assert lc.process_request(command=command, data=b"Error") == (b"err", b"Error")
+    assert lc.process_request(
+        command=command, data=b"Error") == (b"err", b"Error")
     assert lc.process_request(command=command, data=b"Testing") == \
-           (b"err", b"Error receiving string: ID Testing not found.")
+        (b"err", b"Error receiving string: ID Testing not found.")
 
     data_example = InBuffer(total=1)
     lc.in_str = {b"testing": data_example, b"test": InBuffer(total=2)}
     mock_set.reset_mock()
-    assert lc.process_request(command=command, data=b"test") == (b"ok", b"Distributed api response received")
+    assert lc.process_request(command=command, data=b"test") == (
+        b"ok", b"Distributed api response received")
     assert lc.in_str == {b"testing": data_example}
     mock_set.assert_called_once()
 
     mock_set.reset_mock()
-    assert lc.process_request(command=b"ok", data=b"Error") == (b"err", b"Error")
+    assert lc.process_request(
+        command=b"ok", data=b"Error") == (b"err", b"Error")
     assert lc.in_str == {b"testing": data_example}
     mock_set.assert_called_once()
 
     mock_set.reset_mock()
-    assert lc.process_request(command=b"ok", data=b"test") == (b"ok", b"Sendsync response received")
+    assert lc.process_request(command=b"ok", data=b"test") == (
+        b"ok", b"Sendsync response received")
     assert lc.response == b"test"
     mock_set.assert_called_once()
 
     mock_set.reset_mock()
-    assert lc.process_request(command=b"control_res", data=b"Error") == (b"err", b"Error")
+    assert lc.process_request(command=b"control_res",
+                              data=b"Error") == (b"err", b"Error")
     assert lc.in_str == {b"testing": data_example}
     mock_set.assert_called_once()
 
     mock_set.reset_mock()
-    assert lc.process_request(command=b"control_res", data=b"test1") == (b"ok", b"Response received")
+    assert lc.process_request(command=b"control_res", data=b"test1") == (
+        b"ok", b"Response received")
     assert lc.response == b"test1"
     mock_set.assert_called_once()
 
     mock_set.reset_mock()
-    assert lc.process_request(command=b"dapi_err", data=b"test2") == (b"ok", b"Response received")
+    assert lc.process_request(command=b"dapi_err", data=b"test2") == (
+        b"ok", b"Response received")
     assert lc.response == b"test2"
     mock_set.assert_called_once()
 
     mock_set.reset_mock()
-    assert lc.process_request(command=b"err", data=b"test3") == (b"ok", b"Error response received")
+    assert lc.process_request(command=b"err", data=b"test3") == (
+        b"ok", b"Error response received")
     assert lc.response == b"test3"
     mock_set.assert_called_once()
 
-    assert lc.process_request(command=b"another", data=b"test4") == (b"err", b"unknown command \'b'another'\'")
+    assert lc.process_request(command=b"another", data=b"test4") == (
+        b"err", b"unknown command \'b'another'\'")
 
 
 @patch("asyncio.Event.set")
@@ -139,7 +148,8 @@ async def test_localclient_start():
                 await lc.start()
                 assert mock_create_unix_connection.call_count == 1
                 assert mock_create_unix_connection.call_args[1]["path"] == "path/test"
-                assert isinstance(mock_create_unix_connection.call_args[1]["protocol_factory"], Callable)
+                assert isinstance(
+                    mock_create_unix_connection.call_args[1]["protocol_factory"], Callable)
                 assert lc.protocol == "protocol"
                 assert lc.transport == "transport"
 
@@ -163,6 +173,7 @@ async def test_localclient_start_ko(mock_get_running_loop):
         with pytest.raises(WazuhInternalError, match=r'.* 3012 .*'):
             await LocalClient().start()
 
+
 @pytest.mark.asyncio
 async def test_wait_for_response():
     """Verify whether keepalive messages are sent while waiting for response."""
@@ -176,12 +187,14 @@ async def test_wait_for_response():
     lc = LocalClient()
     lc.protocol = Protocol()
     lc.protocol.send_request = AsyncMock()
-    lc.protocol.send_request.side_effect = [b"None", exception.WazuhClusterError(3018)]
+    lc.protocol.send_request.side_effect = [
+        b"None", exception.WazuhClusterError(3018)]
 
     with patch("asyncio.Event.wait", side_effect=asyncio.TimeoutError):
         with pytest.raises(WazuhInternalError, match=rf".* 3020 .*"):
             await lc.wait_for_response(timeout=200)
-    lc.protocol.send_request.assert_has_calls([call(b'echo-c', b'keepalive'), call(b'echo-c', b'keepalive')])
+    lc.protocol.send_request.assert_has_calls(
+        [call(b'echo-c', b'keepalive'), call(b'echo-c', b'keepalive')])
 
 
 @pytest.mark.asyncio
@@ -229,11 +242,13 @@ async def test_localclient_send_api_request_ko(mock_get_running_loop):
     lc = LocalClient()
     lc.protocol = Protocol()
     lc.protocol.send_request = AsyncMock()
-    lc.protocol.send_request.side_effect = [b"None", exception.WazuhClusterError(3018)]
+    lc.protocol.send_request.side_effect = [
+        b"None", exception.WazuhClusterError(3018)]
     with patch("asyncio.Event.wait", side_effect=asyncio.TimeoutError):
         with pytest.raises(WazuhInternalError, match=rf".* 3020 .*"):
             await lc.send_api_request(command=b"dapi", data=b"None")
-    lc.protocol.send_request.assert_has_calls([call(b'dapi', b'None'), call(b'echo-c', b'keepalive')])
+    lc.protocol.send_request.assert_has_calls(
+        [call(b'dapi', b'None'), call(b'echo-c', b'keepalive')])
 
 
 @pytest.mark.asyncio
