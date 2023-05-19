@@ -29,6 +29,10 @@
 #define LOCALFILE_STATUS        "queue/logcollector/file_status.json"
 #endif
 
+#ifdef WIN32
+#define MAX_STDIO 4000
+#endif
+
 ///< JSON fields for file_status
 #define OS_LOGCOLLECTOR_JSON_FILES      "files"
 #define OS_LOGCOLLECTOR_JSON_PATH       "path"

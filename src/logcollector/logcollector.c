@@ -225,8 +225,14 @@ void LogCollectorStart()
 
 #ifdef WIN32
     /* Increment maxstdio to its maximum possible value */
-    minfo("Increasing maxstdio to: %d", 8192);
-    _setmaxstdio(8192);
+    if (_setmaxstdio(MAX_STDIO) == -1)
+    {
+        merror("Could not increase maxstdio (%s): %s", errno, strerror(errno));
+    }
+    else
+    {
+        minfo("maxstdio increased to %d", MAX_STDIO);
+    }
 #endif
 
     // Check for expanded files
