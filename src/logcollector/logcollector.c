@@ -1517,6 +1517,10 @@ int check_pattern_expand(int do_seek) {
     int i, j;
     int retval = 0;
 
+#ifdef WIN32
+    minfo("Number of maxstdio: %d", _getmaxstdio());
+#endif
+
     if (globs) {
         for (j = 0; globs[j].gpath; j++) {
 
