@@ -223,6 +223,12 @@ void LogCollectorStart()
     set_sockets();
     files_lock_init();
 
+#ifdef WIN32
+    /* Increment maxstdio to its maximum possible value */
+    minfo("Increasing maxstdio to: %d", 8192);
+    _setmaxstdio(8192);
+#endif
+
     // Check for expanded files
     check_pattern_expand(1);
     check_pattern_expand_excluded();
