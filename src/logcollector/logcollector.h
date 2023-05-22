@@ -30,7 +30,7 @@
 #endif
 
 #ifdef WIN32
-#define MAX_STDIO 4000
+#define MAX_STDIO 2000
 #endif
 
 ///< JSON fields for file_status
