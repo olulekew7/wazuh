@@ -3,7 +3,7 @@
 # This program is free software; you can redistribute it and/or modify it under the terms of GPLv2
 
 from os import remove
-from os.path import exists, join
+from os.path import exists, join, abspath, commonpath
 from typing import Union
 from xml.parsers.expat import ExpatError
 
@@ -314,7 +314,7 @@ def get_rule_file(filename: str = None, raw: bool = False, default_ruleset: bool
     Parameters
     ----------
     filename : str, optional
-        Name of the rule file. Default `None`
+        Name with complete relative path of the rule file. Default `None`
     raw : bool, optional
         Whether to return the content in raw format (str->XML) or JSON. Default `False` (JSON format)
     default_ruleset : bool
@@ -327,30 +327,35 @@ def get_rule_file(filename: str = None, raw: bool = False, default_ruleset: bool
     """
     result = AffectedItemsWazuhResult(none_msg='No rule was returned',
                                       all_msg='Selected rule was returned')
-    files = get_rules_files(filename=filename).affected_items
     rules_path = common.RULES_PATH if default_ruleset else common.USER_RULES_PATH
-    exc_path = join(rules_path.replace(common.WAZUH_PATH, 'WAZUH_HOME'), filename)
+    full_path = abspath(join(rules_path, filename))
+    if commonpath([rules_path, full_path]) != rules_path:
+        result.add_failed_item(id_=filename,
+                    error=WazuhError(1414,
+                                    extra_message=f"{filename}"))
+        return result
 
-    if len(files) > 0 and any([file for file in files if file['relative_dirname'] in rules_path]):
-        try:
-            full_path = join(rules_path, filename)
-            with open(full_path) as f:
-                content = f.read()
-            if raw:
-                result = content
-            else:
-                # Missing root tag in rule file
-                result.affected_items.append(xmltodict.parse(f'<root>{content}</root>')['root'])
-                result.total_affected_items = 1
-        except ExpatError as e:
-            result.add_failed_item(id_=filename,
-                                   error=WazuhError(1413, extra_message=f"{exc_path}: {str(e)}"))
-        except OSError:
-            result.add_failed_item(id_=filename,
-                                   error=WazuhError(1414, extra_message=exc_path))
-
-    else:
-        result.add_failed_item(id_=filename, error=WazuhError(1415, extra_message=exc_path))
+    if not exists(full_path):
+        result.add_failed_item(id_=filename,
+            error=WazuhError(1415,
+                            extra_message=f"{filename}"))
+        return result
+    
+    try:
+        with open(full_path) as f:
+            content = f.read()
+        if raw:
+            result = content
+        else:
+            # Missing root tag in rule file
+            result.affected_items.append(xmltodict.parse(f'<root>{content}</root>')['root'])
+            result.total_affected_items = 1
+    except ExpatError as e:
+        result.add_failed_item(id_=filename,
+                                error=WazuhError(1413, extra_message=f"{filename}: {str(e)}"))
+    except OSError:
+        result.add_failed_item(id_=filename,
+                                error=WazuhError(1414, extra_message=f"{filename}"))
 
     return result
 
