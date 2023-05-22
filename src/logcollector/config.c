@@ -53,6 +53,10 @@ int LogCollectorConfig(const char *cfgfile)
     free_excluded_files_interval = getDefine_Int("logcollector", "exclude_files_interval", 1, 172800);
     state_interval = getDefine_Int("logcollector", "state_interval", 0, 3600);
 
+#ifdef WIN32
+    maximum_stdio = getDefine_Int("logcollector", "max_stdio", 1, 100000);
+#endif
+
     /* Current and total files counter */
     total_files = 0;
     current_files = 0;

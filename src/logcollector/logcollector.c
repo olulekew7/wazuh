@@ -99,6 +99,9 @@ int reload_delay;
 int free_excluded_files_interval;
 int state_interval;
 OSHash * msg_queues_table;
+#ifdef WIN32
+unsigned int maximum_stdio;
+#endif
 
 ///< To asociate the path, the position to read, and the hash key of lines read.
 OSHash * files_status;
@@ -226,13 +229,13 @@ void LogCollectorStart()
 #ifdef WIN32
     /* Increment maxstdio to its maximum possible value */
     minfo("Attempting to increase maxstdio");
-    if (_setmaxstdio(MAX_STDIO) == -1)
+    if (_setmaxstdio(maximum_stdio) == -1)
     {
         merror("Could not increase maxstdio (%s): %s", errno, strerror(errno));
     }
     else
     {
-        minfo("maxstdio increased to %d", MAX_STDIO);
+        minfo("maxstdio increased to %d", maximum_stdio);
     }
 #endif
 

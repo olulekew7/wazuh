@@ -29,10 +29,6 @@
 #define LOCALFILE_STATUS        "queue/logcollector/file_status.json"
 #endif
 
-#ifdef WIN32
-#define MAX_STDIO 2000
-#endif
-
 ///< JSON fields for file_status
 #define OS_LOGCOLLECTOR_JSON_FILES      "files"
 #define OS_LOGCOLLECTOR_JSON_PATH       "path"
@@ -180,6 +176,9 @@ extern int reload_interval;
 extern int reload_delay;
 extern int free_excluded_files_interval;
 extern int state_interval;
+#ifdef WIN32
+extern unsigned int maximum_stdio;
+#endif
 
 typedef enum {
     CONTINUE_IT,
