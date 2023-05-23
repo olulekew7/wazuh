@@ -5,22 +5,25 @@ import "google/protobuf/struct.proto"; // For Value
 
 package com.wazuh.api.engine.test;
 
-/******************** Only for test proposes ********************/
+enum DebugMode
+{
+    ONLY_OUTPUT = 0;
+    OUTPUT_AND_TRACES = 1;
+    OUTPUT_AND_TRACES_WITH_DETAILS = 2;
+}
+
 message Run_Request
 {
-    optional string kvdbPath = 1;
-    optional string fileStorage = 2;
-    optional string policy = 3;
-    optional string logLevel = 4;
-    optional int32 debugLevel = 5;
-    repeated string assetTrace = 6;
-    optional bytes protocolQueue = 7;
-    optional string protocolLocation = 8;
+    optional string policy = 1;
+    optional google.protobuf.Value event = 2;
+    optional uint32 protocolqueue = 3;
+    optional DebugMode debugmode = 4;
 }
 
 message Run_Response
 {
-    ReturnStatus status = 1;                  // Status of the query
-    optional string error = 2;                // Error message if status is ERROR
-    optional google.protobuf.Value value = 3; // Content of the resource if status is OK
+    ReturnStatus status = 1;                   // Status of the query
+    optional string error = 2;                 // Error message if status is ERROR
+    optional google.protobuf.Value output = 3; // test output
+    optional google.protobuf.Value traces = 4; // test rules
 }
