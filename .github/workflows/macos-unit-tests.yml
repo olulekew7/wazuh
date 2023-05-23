@@ -18,8 +18,6 @@ jobs:
         run: |
           make deps -C src TARGET=agent -j2
           make -C src TARGET=agent -j2 DEBUG=1 TEST=1
-      - name: Setup upterm session
-        uses: lhotari/action-upterm@v1
       - name: Run wazuh unit tests for macOS 11
         run: |
           cd src/data_provider/build
