@@ -27,11 +27,7 @@ class LocalServerHandler(server.AbstractServerHandler):
     """
 
     def _create_cmd_handlers(self):
-        """
-            Assign _cmd_handler class dictionary copying super class 
-            _cmd_handler dictionary entries and adding command 
-            handlers
-        """
+        """Add command handlers to _cmd_handler dictionary."""
         super()._create_cmd_handlers()
         self._cmd_handler.update(
             {
@@ -60,6 +56,20 @@ class LocalServerHandler(server.AbstractServerHandler):
         self.logger.debug('Connection received in local server.')
 
     def _cmd_send_file(self, data: bytes):
+        """Handle incoming send_file requests
+
+        Parameters
+        ----------
+        data : bytes
+            Received payload.
+
+        Returns
+        -------
+        bytes
+            Result.
+        bytes
+            Response message.            
+        """
         path, node_name = data.decode().split(' ')
         return self.send_file_request(path, node_name)
 
@@ -232,11 +242,7 @@ class LocalServerHandlerMaster(LocalServerHandler):
     """
 
     def _create_cmd_handlers(self):
-        """
-            Assign _cmd_handler class dictionary copying super class 
-            _cmd_handler dictionary entries and adding command 
-            handlers
-        """
+        """Add handlers to _cmd_handler dictionary"""
         super()._create_cmd_handlers()
         self._cmd_handler.update(
             {
@@ -373,11 +379,7 @@ class LocalServerHandlerWorker(LocalServerHandler):
     """
 
     def _create_cmd_handlers(self):
-        """
-            Assign _cmd_handler class dictionary copying super class 
-            _cmd_handler dictionary entries and adding command 
-            handlers
-        """
+        """Add handlers to _cmd_handler dictionary"""
         super()._create_cmd_handlers()
         self._cmd_handler.update(
             {
