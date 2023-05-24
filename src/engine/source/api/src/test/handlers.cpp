@@ -3,22 +3,11 @@
 #include <json/json.hpp>
 
 #include <api/adapter.hpp>
-
-#include <atomic>
 #include <chrono>
-#include <cmds/details/stackExecutor.hpp>
-#include <memory>
-#include <thread>
-
-#include <re2/re2.h>
-#include <hlp/logpar.hpp>
-#include <hlp/registerParsers.hpp>
-#include <kvdb/kvdbManager.hpp>
-#include <logging/logging.hpp>
-#include <metrics/metricsManager.hpp>
 #include <name.hpp>
 #include <rxbk/rxFactory.hpp>
 #include <store/drivers/fileDriver.hpp>
+#include <thread>
 
 #include "base/parseEvent.hpp"
 #include "base/utils/getExceptionStack.hpp"
@@ -37,14 +26,6 @@ namespace api::test::handlers
 
 namespace eTest = ::com::wazuh::api::engine::test;
 namespace eEngine = ::com::wazuh::api::engine;
-
-/* Manager Endpoint */
-std::atomic<bool> gs_doRun = true;
-cmd::details::StackExecutor g_exitHanlder {};
-void sigint_handler(const int signum)
-{
-    gs_doRun = false;
-}
 
 api::Handler testRunCmd(const Config& config)
 {
@@ -74,13 +55,26 @@ api::Handler testRunCmd(const Config& config)
         }
 
         auto event = fmt::format("{}:{}:{}", eRequest.protocolqueue(), "/dev/stdin", eRequest.event().string_value());
-        config.router->enqueueOssecEvent(event);
+        auto err = config.router->enqueueOssecEvent(event);
+        if (err.has_value())
+        {
+            return ::api::adapter::genericError<ResponseType>(err.value().message);
+        }
 
         ResponseType eResponse;
 
-        const auto protoVal = eMessage::eMessageFromJson<google::protobuf::Value>(config.router->getOutput());
-        const auto jsonValue = std::get<google::protobuf::Value>(protoVal);
-        eResponse.mutable_output()->CopyFrom(jsonValue);
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+
+        const auto output = eMessage::eMessageFromJson<google::protobuf::Value>(config.router->getOutput());
+        const auto jsonOutput = std::get<google::protobuf::Value>(output);
+        eResponse.mutable_output()->CopyFrom(jsonOutput);
+
+        if (eTest::DebugMode::OUTPUT_AND_TRACES == eRequest.debugmode() || eTest::DebugMode::OUTPUT_AND_TRACES_WITH_DETAILS == eRequest.debugmode())
+        {
+            const auto trace = eMessage::eMessageFromJson<google::protobuf::Value>(config.router->getTrace());
+            const auto jsonTrace = std::get<google::protobuf::Value>(trace);
+            eResponse.mutable_traces()->CopyFrom(jsonTrace);
+        }
 
         eResponse.set_status(eEngine::ReturnStatus::OK);
 
