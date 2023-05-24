@@ -119,28 +119,6 @@ class WorkerHandler(client.AbstractClient, c_common.WazuhCommon):
     Handle connection with the master node.
     """
 
-    def _create_cmd_handlers(self):
-        """
-            Add handlers entries to _cmd_handler dictionary
-        """
-        super()._create_cmd_handlers()
-        self._cmd_handler.update(
-            {
-                b'syn_m_c_ok': lambda _, __: self.sync_integrity_ok_from_master(),
-                b'syn_m_c': lambda _, __: self.setup_receive_files_from_master(),
-                b'syn_m_c_e': lambda _, data: self.end_receiving_integrity(data.decode()),
-                b'syn_m_c_r': lambda _, data: self.error_receiving_integrity(data.decode()),
-                b'syn_g_m_w': lambda command, data: self.setup_sync_integrity(command, data),
-                b'syn_g_m_w_c': lambda command, data: self.setup_sync_integrity(command, data),
-                b'syn_m_a_e': lambda _, data: self._command_syn_m_a_e(data),
-                b'syn_m_a_err': lambda _, data: self._command_syn_m_a_err(data),
-                b'dapi_res': lambda _, data: self._command_dapi_res(data),
-                b'sendsyn_res': lambda _, data: self._command_sendsyn_res(data),
-                b'sendsyn_err': lambda _, data: self._command_sendsyn_err(data),
-                b'dapi': lambda _, data: self._command_dapi(data),
-            }
-        )
-
     def __init__(self, version, node_type, cluster_name, **kwargs):
         """Class constructor.
 
@@ -185,6 +163,27 @@ class WorkerHandler(client.AbstractClient, c_common.WazuhCommon):
         # Maximum zip size allowed when syncing Integrity files.
         self.current_zip_limit = self.cluster_items['intervals']['communication']['max_zip_size']
 
+
+    def _create_cmd_handlers(self):
+        """Add handlers entries to _cmd_handler dictionary"""
+        super()._create_cmd_handlers()
+        self._cmd_handler.update(
+            {
+                b'syn_m_c_ok': lambda _, __: self.sync_integrity_ok_from_master(),
+                b'syn_m_c': lambda _, __: self.setup_receive_files_from_master(),
+                b'syn_m_c_e': lambda _, data: self.end_receiving_integrity(data.decode()),
+                b'syn_m_c_r': lambda _, data: self.error_receiving_integrity(data.decode()),
+                b'syn_g_m_w': lambda command, data: self.setup_sync_integrity(command, data),
+                b'syn_g_m_w_c': lambda command, data: self.setup_sync_integrity(command, data),
+                b'syn_m_a_e': lambda _, data: self._cmd_syn_m_a_e(data),
+                b'syn_m_a_err': lambda _, data: self._cmd_syn_m_a_err(data),
+                b'dapi_res': lambda _, data: self._cmd_dapi_res(data),
+                b'sendsyn_res': lambda _, data: self._cmd_sendsyn_res(data),
+                b'sendsyn_err': lambda _, data: self._cmd_sendsyn_err(data),
+                b'dapi': lambda _, data: self._cmd_dapi(data),
+            }
+        )
+
     def connection_result(self, future_result):
         """Callback function called when the master sends a response to the hello command sent by the worker.
 
@@ -202,30 +201,114 @@ class WorkerHandler(client.AbstractClient, c_common.WazuhCommon):
                 utils.mkdir_with_mode(worker_tmp_files)
 
     # Command methods used in handler dictionary
-    def _command_syn_m_a_e(self, data: bytes) -> Union[bytes, Tuple[bytes, bytes]]:
+    def _cmd_syn_m_a_e(self, data: bytes) -> Union[bytes, Tuple[bytes, bytes]]:
+        """Handle incoming syn_m_a_e requests
+
+        Parameters
+        ----------
+        data : bytes
+            Received payload.
+
+        Returns
+        -------
+        bytes
+            Result.
+        bytes
+            Response message.            
+        """
         logger = self.task_loggers['Agent-info sync']
         start_time = self.agent_info_sync_status['date_start']
         return c_common.end_sending_agent_information(logger, start_time, data.decode())
 
-    def _command_syn_m_a_err(self, data: bytes) -> Union[bytes, Tuple[bytes, bytes]]:
+    def _cmd_syn_m_a_err(self, data: bytes) -> Union[bytes, Tuple[bytes, bytes]]:
+        """Handle incoming syn_m_a_err requests
+
+        Parameters
+        ----------
+        data : bytes
+            Received payload.
+
+        Returns
+        -------
+        bytes
+            Result.
+        bytes
+            Response message.            
+        """
         logger = self.task_loggers['Agent-info sync']
         return c_common.error_receiving_agent_information(logger, data.decode(), info_type='agent-info')
 
-    def _command_dapi_res(self, data: bytes) -> Union[bytes, Tuple[bytes, bytes]]:
+    def _cmd_dapi_res(self, data: bytes) -> Union[bytes, Tuple[bytes, bytes]]:
+        """Handle incoming dapi_res requests
+
+        Parameters
+        ----------
+        data : bytes
+            Received payload.
+
+        Returns
+        -------
+        bytes
+            Result.
+        bytes
+            Response message.            
+        """
         asyncio.create_task(self.forward_dapi_response(data))
         return b'ok', b'Response forwarded to worker'
 
-    def _command_sendsyn_res(self, data: bytes) -> Union[bytes, Tuple[bytes, bytes]]:
+    def _cmd_sendsyn_res(self, data: bytes) -> Union[bytes, Tuple[bytes, bytes]]:
+        """Handle incoming sendsyn_res requests
+
+        Parameters
+        ----------
+        data : bytes
+            Received payload.
+
+        Returns
+        -------
+        bytes
+            Result.
+        bytes
+            Response message.            
+        """
         asyncio.create_task(self.forward_sendsync_response(data))
         return b'ok', b'Response forwarded to worker'
 
-    def _command_sendsyn_err(self, data: bytes) -> Union[bytes, Tuple[bytes, bytes]]:
+    def _cmd_sendsyn_err(self, data: bytes) -> Union[bytes, Tuple[bytes, bytes]]:
+        """Handle incoming sendsyn_err requests
+
+        Parameters
+        ----------
+        data : bytes
+            Received payload.
+
+        Returns
+        -------
+        bytes
+            Result.
+        bytes
+            Response message.            
+        """
         sendsync_client, error_msg = data.split(b' ', 1)
         asyncio.create_task(self.log_exceptions(
             self.server.local_server.clients[sendsync_client.decode()].send_request(b'err', error_msg)))
         return b'ok', b'SendSync error forwarded to worker'
 
-    def _command_dapi(self, data: bytes) -> Union[bytes, Tuple[bytes, bytes]]:
+    def _cmd_dapi(self, data: bytes) -> Union[bytes, Tuple[bytes, bytes]]:
+        """Handle incoming dapi requests
+
+        Parameters
+        ----------
+        data : bytes
+            Received payload.
+
+        Returns
+        -------
+        bytes
+            Result.
+        bytes
+            Response message.            
+        """
         self.server.dapi.add_request(b'master*' + data)
         return b'ok', b'Added request to API requests queue'
     # End fo command methods used in the handler dictionary
