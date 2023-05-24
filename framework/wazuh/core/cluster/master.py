@@ -215,8 +215,7 @@ class MasterHandler(server.AbstractServerHandler, c_common.WazuhCommon):
         self.current_zip_limit = self.cluster_items['intervals']['communication']['max_zip_size']
 
     def _create_cmd_handlers(self):
-        """Add handlers entries to _cmd_handler dictionary.
-        """
+        """Add handlers entries to _cmd_handler dictionary."""
         super()._create_cmd_handlers()
         self._cmd_handler.update(
             {
