@@ -138,17 +138,6 @@ class AbstractClient(Handler):
     Define a client protocol. Handle connection with server.
     """
 
-    def _create_cmd_handlers(self):
-        """
-            Add command handlers to _cmd_handler dictionary
-        """
-        super()._create_cmd_handlers()
-        self._cmd_handler.update(
-            {
-                b'echo-m': lambda _, data: self.echo_client(data),
-            }
-        )
-
     def __init__(self, loop: uvloop.EventLoopPolicy, on_con_lost: asyncio.Future, name: str, fernet_key: str,
                  logger: logging.Logger, manager: AbstractClientManager, cluster_items: Dict, tag: str = "Client"):
         """Class constructor.
@@ -178,6 +167,15 @@ class AbstractClient(Handler):
         self.on_con_lost = on_con_lost
         self.connected = False
         self.client_data = self.name.encode()
+
+    def _create_cmd_handlers(self):
+        """Add command handlers to _cmd_handler dictionary"""
+        super()._create_cmd_handlers()
+        self._cmd_handler.update(
+            {
+                b'echo-m': lambda _, data: self.echo_client(data),
+            }
+        )
 
     def connection_result(self, future_result):
         """Callback function called when the master sends a response to the hello command sent by the worker.
