@@ -73,7 +73,7 @@ class LocalClientHandler(client.AbstractClient):
         bytes
             Result.
         bytes
-            Response message.            
+            Response message.
         """
         if data.startswith(b'Error'):
             return b'err', self.process_error_from_peer(data)
@@ -98,7 +98,7 @@ class LocalClientHandler(client.AbstractClient):
         bytes
             Result.
         bytes
-            Response message.            
+            Response message.
         """
         if data.startswith(b'Error'):
             return b'err', self.process_error_from_peer(data)
@@ -119,7 +119,7 @@ class LocalClientHandler(client.AbstractClient):
         bytes
             Result.
         bytes
-            Response message.            
+            Response message.
         """
         if data.startswith(b'Error'):
             return b'err', self.process_error_from_peer(data)
@@ -140,7 +140,7 @@ class LocalClientHandler(client.AbstractClient):
         bytes
             Result.
         bytes
-            Response message.            
+            Response message.
         """
         self.response = data
         self.response_available.set()
@@ -159,7 +159,7 @@ class LocalClientHandler(client.AbstractClient):
         bytes
             Result.
         bytes
-            Response message.            
+            Response message.
         """
         self.response = data
         self.response_available.set()
@@ -232,11 +232,11 @@ class LocalClient(client.AbstractClientManager):
         on_con_lost = loop.create_future()
         try:
             self.transport, self.protocol = await loop.create_unix_connection(
-                protocol_factory=lambda: LocalClientHandler(loop=loop, on_con_lost=on_con_lost,
-                                                            name=self.name, logger=self.logger,
-                                                            fernet_key='', manager=self,
-                                                            cluster_items=self.cluster_items),
-                path=os.path.join(common.WAZUH_PATH, 'queue', 'cluster', 'c-internal.sock'))
+                                             protocol_factory=lambda: LocalClientHandler(loop=loop, on_con_lost=on_con_lost,
+                                                                                         name=self.name, logger=self.logger,
+                                                                                         fernet_key='', manager=self,
+                                                                                         cluster_items=self.cluster_items),
+                                             path=os.path.join(common.WAZUH_PATH, 'queue', 'cluster', 'c-internal.sock'))
         except (ConnectionRefusedError, FileNotFoundError):
             raise exception.WazuhInternalError(3012)
         except MemoryError:
@@ -264,8 +264,7 @@ class LocalClient(client.AbstractClientManager):
 
         while True:
             elapsed_time = time.perf_counter() - start_time
-            min_timeout = min(max(timeout - elapsed_time, 0),
-                              self.cluster_items['intervals']['worker']['keep_alive'])
+            min_timeout = min(max(timeout - elapsed_time, 0), self.cluster_items['intervals']['worker']['keep_alive'])
             try:
                 await asyncio.wait_for(self.protocol.response_available.wait(), timeout=min_timeout)
                 return self.protocol.response.decode()
