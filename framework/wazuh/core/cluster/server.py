@@ -327,12 +327,10 @@ class AbstractServer:
                 try:
                     self.broadcast_results[broadcast_id][name] = AbstractServer.NO_RESULT
                     client.add_request(broadcast_id, f, *args, **kwargs)
-                    self.logger.debug2(
-                        f'Added broadcast request to execute "{f.__name__}" in {name}.')
+                    self.logger.debug2(f'Added broadcast request to execute "{f.__name__}" in {name}.')
                 except Exception as e:
                     self.broadcast_results[broadcast_id].pop(name, None)
-                    self.logger.error(
-                        f'Error while adding broadcast request in {name}: {e}', exc_info=False)
+                    self.logger.error(f'Error while adding broadcast request in {name}: {e}', exc_info=False)
 
             if not self.broadcast_results[broadcast_id]:
                 self.broadcast_results.pop(broadcast_id, None)
@@ -511,8 +509,7 @@ class AbstractServer:
                         self.logger.error(f"Error during concurrency test ({i+1}/{self.concurrency}, {client_name}): "
                                           f"{e}")
             after = perf_counter()
-            self.logger.info(
-                f"Time sending {self.concurrency} messages: {after - before}")
+            self.logger.info(f"Time sending {self.concurrency} messages: {after - before}")
             await asyncio.sleep(10)
 
     async def start(self):

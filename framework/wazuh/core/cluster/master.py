@@ -986,8 +986,7 @@ class MasterHandler(server.AbstractServerHandler, c_common.WazuhCommon):
         # Log any possible error found in the process.
         self.integrity_sync_status['total_extra_valid'] = result['total_updated']
         if result['errors_per_folder']:
-            logger.error(
-                f"Errors updating worker files: {dict(result['errors_per_folder'])}", exc_info=False)
+            logger.error(f"Errors updating worker files: {dict(result['errors_per_folder'])}", exc_info=False)
         for error in result['generic_errors']:
             logger.error(error, exc_info=False)
 
@@ -1077,11 +1076,9 @@ class MasterHandler(server.AbstractServerHandler, c_common.WazuhCommon):
                         except Exception as e:
                             result['errors_per_folder'][item_key].append(str(e))
         except TimeoutError:
-            result['generic_errors'].append(
-                "Timeout processing extra-valid files.")
+            result['generic_errors'].append("Timeout processing extra-valid files.")
         except Exception as e:
-            result['generic_errors'].append(
-                f"Error updating worker files (extra valid): '{str(e)}'.")
+            result['generic_errors'].append(f"Error updating worker files (extra valid): '{str(e)}'.")
 
         return result
 
@@ -1217,8 +1214,7 @@ class Master(server.AbstractServer):
                 self.integrity_control = await cluster.run_in_pool(self.loop, self.task_pool, cluster.get_files_status,
                                                                    self.integrity_control)
             except Exception as e:
-                file_integrity_logger.error(
-                    f"Error calculating local file integrity: {e}")
+                file_integrity_logger.error(f"Error calculating local file integrity: {e}")
             finally:
                 # With this we avoid that each worker starts integrity_check more than once per local_integrity
                 self.integrity_already_executed.clear()

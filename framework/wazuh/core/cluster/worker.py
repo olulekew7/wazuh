@@ -615,8 +615,7 @@ class WorkerHandler(client.AbstractClient, c_common.WazuhCommon):
                                                                            cluster.get_files_status,
                                                                            self.server.integrity_control)
                         await integrity_check.sync(files={}, files_metadata=self.server.integrity_control,
-                                                   metadata_len=len(
-                                                       self.server.integrity_control),
+                                                   metadata_len=len(self.server.integrity_control),
                                                    task_pool=self.server.task_pool)
             # If exception is raised during sync process, notify the master so it removes the file if received.
             except Exception as e:
@@ -833,8 +832,7 @@ class WorkerHandler(client.AbstractClient, c_common.WazuhCommon):
                         overwrite_or_create_files(filename, data)
                     except Exception as e:
                         errors[filetype] += 1
-                        logger.error(
-                            f"Error processing {filetype} file '{filename}': {e}")
+                        logger.error(f"Error processing {filetype} file '{filename}': {e}")
                         continue
             # Remove local files marked as extra.
             elif filetype == 'extra':

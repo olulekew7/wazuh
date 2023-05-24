@@ -64,8 +64,7 @@ def test_localclienthandler_process_request(mock_set):
     mock_set.assert_called_once()
 
     mock_set.reset_mock()
-    assert lc.process_request(
-        command=b"ok", data=b"Error") == (b"err", b"Error")
+    assert lc.process_request(command=b"ok", data=b"Error") == (b"err", b"Error")
     assert lc.in_str == {b"testing": data_example}
     mock_set.assert_called_once()
 
@@ -75,8 +74,7 @@ def test_localclienthandler_process_request(mock_set):
     mock_set.assert_called_once()
 
     mock_set.reset_mock()
-    assert lc.process_request(command=b"control_res",
-                              data=b"Error") == (b"err", b"Error")
+    assert lc.process_request(command=b"control_res", data=b"Error") == (b"err", b"Error")
     assert lc.in_str == {b"testing": data_example}
     mock_set.assert_called_once()
 
@@ -141,8 +139,7 @@ async def test_localclient_start():
                 await lc.start()
                 assert mock_create_unix_connection.call_count == 1
                 assert mock_create_unix_connection.call_args[1]["path"] == "path/test"
-                assert isinstance(
-                    mock_create_unix_connection.call_args[1]["protocol_factory"], Callable)
+                assert isinstance(mock_create_unix_connection.call_args[1]["protocol_factory"], Callable)
                 assert lc.protocol == "protocol"
                 assert lc.transport == "transport"
 

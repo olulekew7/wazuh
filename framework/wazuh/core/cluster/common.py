@@ -330,7 +330,7 @@ class Handler(asyncio.Protocol):
         # Defines command length.
         self.cmd_len = 12
         # Defines header length.
-        self.header_len = self.cmd_len + 8 # 4 bytes of counter and 4 bytes of message size
+        self.header_len = self.cmd_len + 8  # 4 bytes of counter and 4 bytes of message size
         # Defines header format.
         self.header_format = f'!2I{self.cmd_len}s'
         # Stores received data.
@@ -514,7 +514,7 @@ class Handler(asyncio.Protocol):
                     decrypted_payload = \
                         self.my_fernet.decrypt(bytes(self.in_msg.payload)) \
                             if self.my_fernet is not None and not self.in_msg.flag_divided and \
-                                self.in_msg.counter not in self.div_msg_box \
+                               self.in_msg.counter not in self.div_msg_box \
                             else bytes(self.in_msg.payload)
                 except cryptography.fernet.InvalidToken:
                     raise exception.WazuhClusterError(3025)
