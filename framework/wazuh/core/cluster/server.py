@@ -27,18 +27,6 @@ class AbstractServerHandler(Handler):
     Define abstract server protocol. Handle communication with a single client.
     """
 
-    def _create_cmd_handlers(self):
-        """
-            Add command handlers to _cmd_handler dictionary
-        """
-        super()._create_cmd_handlers()
-        self._cmd_handler.update(
-            {
-                b'echo-c': lambda _, __: None,
-                b'hello': lambda _, __: None,
-            }
-        )
-
     def __init__(self, server, loop: asyncio.AbstractEventLoop, fernet_key: str,
                  cluster_items: Dict, logger: logging.Logger = None, tag: str = "Client"):
         """Class constructor.
@@ -70,6 +58,16 @@ class AbstractServerHandler(Handler):
         self.transport = None
         self.handler_tasks = []
         self.broadcast_queue = asyncio.Queue()
+
+    def _create_cmd_handlers(self):
+        """Add command handlers to _cmd_handler dictionary."""
+        super()._create_cmd_handlers()
+        self._cmd_handler.update(
+            {
+                b'echo-c': lambda _, __: None,
+                b'hello': lambda _, __: None,
+            }
+        )
 
     def to_dict(self) -> Dict:
         """Get basic info from AbstractServerHandler instance.
