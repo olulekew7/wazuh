@@ -370,9 +370,7 @@ class Handler(asyncio.Protocol):
         self._create_cmd_handlers()
 
     def _create_cmd_handlers(self):
-        """
-            Assign command handlers to _cmd_handler class dictionary
-        """
+        """Assign command handlers to _cmd_handler class dictionary"""
         self._cmd_handler = {
             b'echo': lambda _, data: self.echo(data),
             b'new_file': lambda _, data: self.receive_file(data),
