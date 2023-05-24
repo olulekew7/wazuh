@@ -18,22 +18,6 @@ class LocalClientHandler(client.AbstractClient):
     Handle connection with the cluster's local server.
     """
 
-    def _create_cmd_handlers(self):
-        """
-            Add handlers to _cmd_handler dictionary
-        """
-        super()._create_cmd_handlers()
-        self._cmd_handler.update(
-            {
-                b'dapi_res': lambda _, data: self._cmd_dapi_res_or_send_f_res(data),
-                b'send_f_res': lambda _, data: self._cmd_dapi_res_or_send_f_res(data),
-                b'ok': lambda _, data: self._cmd_ok(data),
-                b'control_res': lambda _, data: self._cmd_control_res(data),
-                b'dapi_err': lambda _, data: self._cmd_dapi_err(data),
-                b'err': lambda _, data: self._cmd_err(data),
-            }
-        )
-
     def __init__(self, **kwargs):
         """Class constructor.
 
@@ -45,6 +29,20 @@ class LocalClientHandler(client.AbstractClient):
         super().__init__(**kwargs)
         self.response_available = asyncio.Event()
         self.response = b''
+
+    def _create_cmd_handlers(self):
+        """Add handlers to _cmd_handler dictionary"""
+        super()._create_cmd_handlers()
+        self._cmd_handler.update(
+            {
+                b'dapi_res': lambda _, data: self._cmd_dapi_res_or_send_f_res(data),
+                b'send_f_res': lambda _, data: self._cmd_dapi_res_or_send_f_res(data),
+                b'ok': lambda _, data: self._cmd_ok(data),
+                b'control_res': lambda _, data: self._cmd_control_res(data),
+                b'dapi_err': lambda _, data: self._cmd_dapi_err(data),
+                b'err': lambda _, data: self._cmd_err(data),
+            }
+        )
 
     def connection_made(self, transport):
         """Define process of connecting to the server.
@@ -63,6 +61,20 @@ class LocalClientHandler(client.AbstractClient):
         pass
 
     def _cmd_dapi_res_or_send_f_res(self, data: bytes) -> Tuple[bytes, bytes]:
+        """Handle incoming dapi_res_or_send_f_res requests
+
+        Parameters
+        ----------
+        data : bytes
+            Received payload.
+
+        Returns
+        -------
+        bytes
+            Result.
+        bytes
+            Response message.            
+        """
         if data.startswith(b'Error'):
             return b'err', self.process_error_from_peer(data)
         elif data not in self.in_str:
@@ -74,6 +86,20 @@ class LocalClientHandler(client.AbstractClient):
         return b'ok', b'Distributed api response received'
 
     def _cmd_ok(self, data: bytes) -> Tuple[bytes, bytes]:
+        """Handle incoming ok requests
+
+        Parameters
+        ----------
+        data : bytes
+            Received payload.
+
+        Returns
+        -------
+        bytes
+            Result.
+        bytes
+            Response message.            
+        """
         if data.startswith(b'Error'):
             return b'err', self.process_error_from_peer(data)
         self.response = data
@@ -81,6 +107,20 @@ class LocalClientHandler(client.AbstractClient):
         return b'ok', b'Sendsync response received'
 
     def _cmd_control_res(self, data: bytes) -> Tuple[bytes, bytes]:
+        """Handle incoming control_res requests
+
+        Parameters
+        ----------
+        data : bytes
+            Received payload.
+
+        Returns
+        -------
+        bytes
+            Result.
+        bytes
+            Response message.            
+        """
         if data.startswith(b'Error'):
             return b'err', self.process_error_from_peer(data)
         self.response = data
@@ -88,11 +128,39 @@ class LocalClientHandler(client.AbstractClient):
         return b'ok', b'Response received'
 
     def _cmd_dapi_err(self, data: bytes) -> Tuple[bytes, bytes]:
+        """Handle incoming dapi_err requests
+
+        Parameters
+        ----------
+        data : bytes
+            Received payload.
+
+        Returns
+        -------
+        bytes
+            Result.
+        bytes
+            Response message.            
+        """
         self.response = data
         self.response_available.set()
         return b'ok', b'Response received'
 
     def _cmd_err(self, data: bytes) -> Tuple[bytes, bytes]:
+        """Handle incoming err requests
+
+        Parameters
+        ----------
+        data : bytes
+            Received payload.
+
+        Returns
+        -------
+        bytes
+            Result.
+        bytes
+            Response message.            
+        """
         self.response = data
         self.response_available.set()
         return b'ok', b'Error response received'
